@@ -36,7 +36,7 @@ class UpdateManagedUserRequest extends FormRequest
                 'string',
                 'size:11',
                 'regex:/^[1-9][0-9]{10}$/',
-                Rule::unique(User::class)->ignore($user)->whereNull('deleted_at'),
+                Rule::unique(User::class)->ignore($user),
             ],
             'phone' => ['nullable', 'string', 'max:50'],
             'role_id' => ['required', Rule::exists('roles', 'id')->where('is_active', true)],
