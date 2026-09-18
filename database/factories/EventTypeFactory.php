@@ -1,0 +1,26 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\EventType;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<EventType>
+ */
+class EventTypeFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->unique()->sentence(2),
+            'slug' => fake()->unique()->slug(),
+            'is_active' => true,
+        ];
+    }
+}
