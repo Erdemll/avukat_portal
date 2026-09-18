@@ -44,6 +44,7 @@
             <div class="p-6 sm:p-8">
                 <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
                     @csrf
+                    <input type="hidden" id="login_type" name="login_type" value="email">
 
                     {{-- Email Login Tab --}}
                     <div id="panel-email">
@@ -107,6 +108,7 @@
             const lawyerPanel = document.getElementById('panel-lawyer');
             const emailInput = document.getElementById('email');
             const sicilInput = document.getElementById('sicil_no');
+            const loginTypeInput = document.getElementById('login_type');
 
             if (tab === 'email') {
                 emailTab.className = 'flex-1 px-4 py-3 text-sm font-semibold text-indigo-700 border-b-2 border-indigo-700 bg-indigo-50 transition';
@@ -116,6 +118,7 @@
                 emailInput.required = true;
                 sicilInput.required = false;
                 sicilInput.value = '';
+                loginTypeInput.value = 'email';
                 emailInput.focus();
             } else {
                 lawyerTab.className = 'flex-1 px-4 py-3 text-sm font-semibold text-indigo-700 border-b-2 border-indigo-700 bg-indigo-50 transition';
@@ -125,6 +128,7 @@
                 sicilInput.required = true;
                 emailInput.required = false;
                 emailInput.value = '';
+                loginTypeInput.value = 'lawyer';
                 sicilInput.focus();
             }
         }

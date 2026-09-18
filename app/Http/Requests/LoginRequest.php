@@ -22,15 +22,16 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->input('login_type') === 'lawyer') {
+            return [
+                'sicil_no' => ['required', 'string', 'size:11', 'regex:/^[1-9][0-9]{10}$/'],
+                'password' => ['required', 'string'],
+                'remember' => ['nullable', 'boolean'],
+            ];
+        }
+
         return [
-            'email' => ['required_without:sicil_no', 'string', 'email'],
-            'sicil_no' => [
-                'nullable',
-                'required_without:email',
-                'string',
-                'size:11',
-                'regex:/^[1-9][0-9]{10}$/',
-            ],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'remember' => ['nullable', 'boolean'],
         ];
@@ -38,6 +39,6 @@ class LoginRequest extends FormRequest
 
     public function isLawyerLogin(): bool
     {
-        return $this->filled('sicil_no');
+        return $this->input('login_type') === 'lawyer' && $this->filled('sicil_no');
     }
 }
