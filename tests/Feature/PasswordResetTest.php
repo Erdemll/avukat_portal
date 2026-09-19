@@ -15,7 +15,12 @@ test('managers can resend password setup mail but employees cannot', function ()
     Notification::fake();
     $manager = userWithRole('manager');
     $target = userWithRole('employee');
-    $this->actingAs($manager)->post(route('admin.users.send-password-reset', $target))->assertRedirect();
+    $this->actingAs($manager)
+        ->from(route('admin.users.edit', $target))
+        ->followingRedirects()
+        ->post(route('admin.users.send-password-reset', $target))
+        ->assertOk()
+        ->assertSee('Parola oluşturma/sıfırlama bağlantısı kullanıcıya gönderildi.');
     $this->actingAs(userWithRole('employee'))->post(route('admin.users.send-password-reset', $target))->assertForbidden();
 });
 

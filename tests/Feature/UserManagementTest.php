@@ -36,3 +36,30 @@ it('does not expose registration or hard delete routes', function () {
     $deleteRoutes = collect(app('router')->getRoutes()->getRoutes())->filter(fn ($route) => in_array('DELETE', $route->methods(), true))->pluck('uri');
     expect($deleteRoutes)->not->toContain('admin/users/{user}');
 });
+
+it('shows the actual account action error instead of a generic form warning', function () {
+    $manager = userWithRole('manager');
+    $inactiveUser = userWithRole('employee');
+    $inactiveUser->forceFill(['is_active' => false])->save();
+
+    $this->actingAs($manager)
+        ->from(route('admin.users.edit', $inactiveUser))
+        ->followingRedirects()
+        ->post(route('admin.users.send-password-reset', $inactiveUser))
+        ->assertOk()
+        ->assertSee('Pasif kullanıcıya parola oluşturma/sıfırlama bağlantısı gönderilemez.')
+        ->assertDontSee('Lütfen işaretlenen alanları kontrol edin.');
+});
+
+it('shows Turkish validation details in the shared error summary', function () {
+    $manager = userWithRole('manager');
+
+    $this->actingAs($manager)
+        ->from(route('admin.users.create'))
+        ->followingRedirects()
+        ->post(route('admin.users.store'), [])
+        ->assertOk()
+        ->assertSee('ad alanı zorunludur.')
+        ->assertSee('e-posta adresi alanı zorunludur.')
+        ->assertSee('rol alanı zorunludur.');
+});
