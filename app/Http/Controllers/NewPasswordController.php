@@ -7,6 +7,7 @@ use App\Http\Requests\ResetPasswordRequest;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -15,9 +16,12 @@ use Illuminate\View\View;
 
 class NewPasswordController extends Controller
 {
-    public function create(string $token): View
+    public function create(Request $request, string $token): View
     {
-        return view('auth.reset-password', compact('token'));
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->string('email')->trim()->toString(),
+        ]);
     }
 
     public function store(ResetPasswordRequest $request, AuditService $audit): RedirectResponse
@@ -35,6 +39,8 @@ class NewPasswordController extends Controller
             });
         });
 
-        return $status === Password::PasswordReset ? redirect()->route('login')->with('status', 'Parolanız sıfırlandı.') : back()->withErrors(['email' => __($status)]);
+        return $status === Password::PasswordReset
+            ? redirect()->route('login')->with('status', 'Parolanız sıfırlandı.')
+            : back()->withErrors(['token' => 'Parola sıfırlama bağlantısı geçersiz, kullanılmış veya süresi dolmuş. Yeni bir bağlantı talep edin.']);
     }
 }

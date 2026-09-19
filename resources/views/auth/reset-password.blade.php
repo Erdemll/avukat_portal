@@ -8,9 +8,13 @@
         @csrf
         <input name="token" type="hidden" value="{{ $token }}">
 
+        @error('token')
+            <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ $message }}</div>
+        @enderror
+
         <div>
             <label class="block text-sm font-medium text-slate-700" for="email">E-posta</label>
-            <input class="mt-1.5 block w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" id="email" name="email" type="email" value="{{ old('email', $email ?? '') }}" autocomplete="username" autofocus required>
+            <input class="mt-1.5 block w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" id="email" name="email" type="email" value="{{ old('email', $email) }}" autocomplete="username" autofocus required @readonly($email !== '')>
             @error('email')<p class="mt-2 text-sm text-red-700">{{ $message }}</p>@enderror
         </div>
         <div>
