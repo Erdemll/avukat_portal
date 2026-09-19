@@ -6,15 +6,18 @@ use App\AuditAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreManagedUserRequest;
 use App\Http\Requests\UpdateManagedUserRequest;
+use App\Models\CaseFileAssignment;
 use App\Models\Event;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -43,10 +46,14 @@ class UserController extends Controller
     public function store(StoreManagedUserRequest $request, AuditService $audit): RedirectResponse
     {
         Gate::authorize('create', User::class);
-        $user = new User($request->validated());
-        $user->password = Str::password(32);
-        $user->save();
-        $audit->safelyLog(AuditAction::UserCreated, $request->user(), description: 'Kullanıcı oluşturuldu.', newValues: ['user_id' => $user->id, 'role_id' => $user->role_id]);
+        $user = DB::transaction(function () use ($request, $audit): User {
+            $user = new User($request->validated());
+            $user->password = Str::password(32);
+            $user->save();
+            $audit->log(AuditAction::UserCreated, $request->user(), auditable: $user, description: 'Kullanıcı oluşturuldu.', newValues: ['user_id' => $user->id, 'role_id' => $user->role_id]);
+
+            return $user;
+        });
 
         return redirect()->route('admin.users.edit', $user);
     }
@@ -67,13 +74,16 @@ class UserController extends Controller
     public function update(UpdateManagedUserRequest $request, User $user, AuditService $audit): RedirectResponse
     {
         Gate::authorize('update', $user);
-        $changingRole = $user->role_id !== $request->integer('role_id');
-        if ($changingRole && $user->isLawyer() && Event::query()->where('assigned_lawyer_id', $user->id)->where('system_status', '!=', 'closed')->exists()) {
-            return back()->withErrors(['role_id' => 'Bu avukata atanmış aktif olaylar bulunduğu için rolü değiştirilemez.']);
-        }
-        $oldRole = $user->role_id;
-        $user->fill($request->validated())->save();
-        $audit->safelyLog($changingRole ? AuditAction::UserRoleChanged : AuditAction::UserUpdated, $request->user(), description: 'Kullanıcı güncellendi.', oldValues: $changingRole ? ['role_id' => $oldRole] : [], newValues: $changingRole ? ['role_id' => $user->role_id] : []);
+        DB::transaction(function () use ($request, $user, $audit): void {
+            $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
+            $changingRole = $lockedUser->role_id !== $request->integer('role_id');
+            if ($changingRole && $lockedUser->isLawyer() && $this->lawyerHasActiveWork($lockedUser)) {
+                throw ValidationException::withMessages(['role_id' => 'Bu avukata atanmış aktif işler bulunduğu için rolü değiştirilemez.']);
+            }
+            $oldRole = $lockedUser->role_id;
+            $lockedUser->fill($request->validated())->save();
+            $audit->log($changingRole ? AuditAction::UserRoleChanged : AuditAction::UserUpdated, $request->user(), auditable: $lockedUser, description: 'Kullanıcı güncellendi.', oldValues: $changingRole ? ['role_id' => $oldRole] : [], newValues: $changingRole ? ['role_id' => $lockedUser->role_id] : []);
+        });
 
         return redirect()->route('admin.users.index');
     }
@@ -84,8 +94,10 @@ class UserController extends Controller
     public function activate(Request $request, User $user, AuditService $audit): RedirectResponse
     {
         Gate::authorize('update', $user);
-        $user->forceFill(['is_active' => true])->save();
-        $audit->safelyLog(AuditAction::UserActivated, $request->user(), description: 'Kullanıcı aktifleştirildi.', newValues: ['user_id' => $user->id]);
+        DB::transaction(function () use ($request, $user, $audit): void {
+            $user->forceFill(['is_active' => true])->save();
+            $audit->log(AuditAction::UserActivated, $request->user(), auditable: $user, description: 'Kullanıcı aktifleştirildi.', newValues: ['user_id' => $user->id]);
+        });
 
         return back();
     }
@@ -93,14 +105,18 @@ class UserController extends Controller
     public function deactivate(Request $request, User $user, AuditService $audit): RedirectResponse
     {
         Gate::authorize('update', $user);
-        if ($user->id === $request->user()->id || ($user->isManager() && User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->where('slug', 'manager'))->count() === 1)) {
-            return back()->withErrors(['user' => 'Sistemde en az bir aktif yönetici kalmalıdır.']);
-        }
-        if ($user->isLawyer() && Event::query()->where('assigned_lawyer_id', $user->id)->where('system_status', '!=', 'closed')->exists()) {
-            return back()->withErrors(['user' => 'Bu avukata atanmış aktif olaylar bulunduğu için pasifleştirilemez.']);
-        }
-        $user->forceFill(['is_active' => false])->save();
-        $audit->safelyLog(AuditAction::UserDeactivated, $request->user(), description: 'Kullanıcı pasifleştirildi.', newValues: ['user_id' => $user->id]);
+        DB::transaction(function () use ($request, $user, $audit): void {
+            $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
+            $activeManagers = User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->where('slug', 'manager'))->lockForUpdate()->get();
+            if ($lockedUser->id === $request->user()->id || ($lockedUser->isManager() && $activeManagers->count() === 1)) {
+                throw ValidationException::withMessages(['user' => 'Sistemde en az bir aktif yönetici kalmalıdır.']);
+            }
+            if ($lockedUser->isLawyer() && $this->lawyerHasActiveWork($lockedUser)) {
+                throw ValidationException::withMessages(['user' => 'Bu avukata atanmış aktif işler bulunduğu için pasifleştirilemez.']);
+            }
+            $lockedUser->forceFill(['is_active' => false])->save();
+            $audit->log(AuditAction::UserDeactivated, $request->user(), auditable: $lockedUser, description: 'Kullanıcı pasifleştirildi.', newValues: ['user_id' => $lockedUser->id]);
+        });
 
         return back();
     }
@@ -124,5 +140,18 @@ class UserController extends Controller
 
             return back()->withErrors(['user' => 'Parola sıfırlama e-postası gönderilemedi.']);
         }
+    }
+
+    private function lawyerHasActiveWork(User $user): bool
+    {
+        return Event::query()
+            ->where('assigned_lawyer_id', $user->id)
+            ->where('system_status', '!=', 'closed')
+            ->exists()
+            || CaseFileAssignment::query()
+                ->where('lawyer_id', $user->id)
+                ->whereNull('ended_at')
+                ->whereHas('caseFile', fn ($query) => $query->where('status', '!=', 'closed'))
+                ->exists();
     }
 }

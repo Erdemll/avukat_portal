@@ -18,7 +18,7 @@
     </div>
 
     {{-- Stats cards --}}
-    <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
+    <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7">
         {{-- Total --}}
         <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div class="flex items-center gap-2">

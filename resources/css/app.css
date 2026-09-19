@@ -6,4 +6,183 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+
+    --color-white: #fffefa;
+    --color-slate-50: #f7f7f4;
+    --color-slate-100: #efefea;
+    --color-slate-200: #dedfd8;
+    --color-slate-300: #c4c8bf;
+    --color-slate-400: #949b91;
+    --color-slate-500: #6d766f;
+    --color-slate-600: #535e58;
+    --color-slate-700: #3d4943;
+    --color-slate-800: #29352f;
+    --color-slate-900: #19241f;
+    --color-slate-950: #101813;
+
+    --color-indigo-50: #eef3f5;
+    --color-indigo-100: #dfe8eb;
+    --color-indigo-200: #c5d5db;
+    --color-indigo-300: #a5bdc6;
+    --color-indigo-400: #7e9eaa;
+    --color-indigo-500: #617f8d;
+    --color-indigo-600: #4b6b79;
+    --color-indigo-700: #385866;
+    --color-indigo-800: #304a55;
+    --color-indigo-900: #293e47;
+    --color-indigo-950: #17272e;
+
+    --color-blue-50: #eef4f5;
+    --color-blue-100: #dce9eb;
+    --color-blue-600: #547984;
+    --color-blue-700: #41636e;
+    --color-blue-900: #29434b;
+    --color-sky-50: #eff5f4;
+    --color-sky-100: #ddebea;
+    --color-sky-600: #557e7c;
+    --color-sky-700: #406866;
+    --color-teal-50: #eff5f1;
+    --color-teal-100: #dfeae3;
+    --color-teal-600: #587b68;
+    --color-teal-700: #466453;
+    --color-emerald-50: #f0f5ef;
+    --color-emerald-100: #dfe9de;
+    --color-emerald-500: #718f73;
+    --color-emerald-600: #5d7c61;
+    --color-emerald-700: #49634d;
+    --color-emerald-800: #3d5341;
+    --color-amber-50: #f8f4e9;
+    --color-amber-100: #eee5ce;
+    --color-amber-200: #dfd0ad;
+    --color-amber-600: #8b7350;
+    --color-amber-700: #705c40;
+    --color-amber-900: #4c3d2b;
+    --color-orange-100: #efe2d5;
+    --color-orange-600: #8f6b4d;
+    --color-orange-700: #74563f;
+    --color-red-50: #f8efed;
+    --color-red-100: #efded9;
+    --color-red-200: #e2c6bf;
+    --color-red-300: #d1a8a0;
+    --color-red-500: #a96f65;
+    --color-red-600: #925b53;
+    --color-red-700: #794b45;
+    --color-red-800: #643f3b;
+    --color-red-900: #4f3532;
+    --color-rose-50: #f8f0f0;
+    --color-rose-600: #956568;
+    --color-rose-700: #7c5256;
+    --color-violet-50: #f3f1f5;
+    --color-violet-200: #d9d1df;
+    --color-violet-600: #776a82;
+    --color-violet-700: #62566d;
+    --color-violet-950: #332d39;
+
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.625rem;
+    --radius-2xl: 0.75rem;
+    --shadow-sm: 0 1px 2px rgb(25 36 31 / 0.04), 0 1px 1px rgb(25 36 31 / 0.03);
+    --shadow-lg: 0 18px 45px rgb(25 36 31 / 0.09);
+    --shadow-xl: 0 24px 60px rgb(25 36 31 / 0.12);
+}
+
+@layer base {
+    html {
+        background: #f4f3ef;
+    }
+
+    body {
+        background: #f4f3ef;
+        color: var(--color-slate-800);
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        text-rendering: optimizeLegibility;
+    }
+
+    h1,
+    h2 {
+        font-family: var(--font-serif);
+        letter-spacing: -0.015em;
+    }
+
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+        min-height: 2.75rem;
+        border-color: var(--color-slate-300);
+        background-color: var(--color-white);
+        color: var(--color-slate-900);
+        box-shadow: inset 0 1px 1px rgb(25 36 31 / 0.025);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--color-slate-400);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--color-indigo-600) !important;
+        --tw-ring-color: color-mix(in srgb, var(--color-indigo-500) 28%, transparent) !important;
+    }
+
+    button,
+    a,
+    summary {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    summary:focus-visible {
+        outline: 2px solid var(--color-indigo-600);
+        outline-offset: 3px;
+    }
+
+    summary::-webkit-details-marker {
+        display: none;
+    }
+
+    table th {
+        letter-spacing: 0.035em;
+    }
+}
+
+@layer components {
+    .portal-nav-link {
+        @apply flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-600;
+    }
+
+    .portal-nav-link:hover {
+        @apply bg-slate-100 text-slate-900;
+    }
+
+    .portal-nav-link-active {
+        @apply bg-indigo-50 text-indigo-800 ring-1 ring-inset ring-indigo-100;
+    }
+
+    .portal-nav-icon {
+        @apply h-4.5 w-4.5 shrink-0 text-slate-400;
+    }
+
+    .portal-nav-link-active .portal-nav-icon {
+        @apply text-indigo-700;
+    }
+
+    .portal-section-label {
+        @apply px-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-400;
+    }
+
+    .portal-panel {
+        @apply border border-slate-200 bg-white shadow-sm;
+    }
+
+    .portal-icon-button {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm;
+    }
+
+    .portal-icon-button:hover {
+        @apply border-slate-300 bg-slate-50 text-slate-800;
+    }
 }

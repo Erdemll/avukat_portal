@@ -7,12 +7,21 @@ use App\Models\User;
 
 class DocumentPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->isManager() || $user->isLawyer();
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function view(User $user, Document $document): bool
     {
-        return $user->can('view', $document->event);
+        return match (true) {
+            $document->case_file_id !== null => $user->can('view', $document->caseFile),
+            $document->event_id !== null => $user->can('view', $document->event),
+            default => false,
+        };
     }
 
     /**
@@ -23,12 +32,17 @@ class DocumentPolicy
         return $this->view($user, $document);
     }
 
+    public function uploadVersion(User $user, Document $document): bool
+    {
+        return $document->case_file_id !== null && $user->can('manageDocuments', $document->caseFile);
+    }
+
     /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Document $document): bool
     {
-        return $user->isManager();
+        return $user->isManager() && $this->view($user, $document);
     }
 
     /**

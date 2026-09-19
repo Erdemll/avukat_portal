@@ -12,9 +12,18 @@
             {{-- Event details --}}
             <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-100 px-6 py-5">
-                    <div class="flex flex-wrap items-start gap-3">
-                        <span class="mt-1 font-mono text-sm font-bold text-indigo-600">{{ $event->event_no }}</span>
-                        <h1 class="text-xl font-bold text-slate-900">{{ $event->title }}</h1>
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="flex flex-wrap items-start gap-3">
+                            <span class="mt-1 font-mono text-sm font-bold text-indigo-600">{{ $event->event_no }}</span>
+                            <h1 class="text-xl font-bold text-slate-900">{{ $event->title }}</h1>
+                        </div>
+                        @can('create', App\Models\CaseFile::class)
+                            @if($event->caseFiles->isEmpty())
+                                <a class="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-800" href="{{ route('events.case-file.create', $event) }}">Hukuki Dosyaya Dönüştür</a>
+                            @else
+                                <a class="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100" href="{{ route('case-files.show', $event->caseFiles->first()) }}">Bağlı Dosyayı Gör</a>
+                            @endif
+                        @endcan
                     </div>
                     <div class="mt-3 flex flex-wrap items-center gap-2">
                         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $event->system_status->badgeClass() }}">{{ $event->system_status->label() }}</span>
@@ -74,13 +83,14 @@
                         <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                             <div class="flex min-w-0 items-center gap-3">
                                 @php
-                                    $icon = match (str($document->mime_type)->before('/')->toString()) {
+                                    /* Icons are constant server-side strings, safe from user input */
+                                    $icons = [
                                         'image' => '<path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V4.5Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />',
                                         'audio' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.102-1.633.294-2.396C2.776 8.756 3.6 8.25 4.51 8.25H6.75Z" />',
                                         'video' => '<path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />',
                                         'text' => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />',
-                                        default => '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />',
-                                    };
+                                    ];
+                                    $icon = $icons[str($document->mime_type)->before('/')->toString()] ?? $icons['text'];
                                 @endphp
                                 <svg class="h-8 w-8 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
                                     {!! $icon !!}
@@ -128,7 +138,7 @@
                         <div class="flex flex-wrap items-end gap-3">
                             <div class="flex-1">
                                 <label class="block text-sm font-medium text-slate-700">Belge Ekle</label>
-                                <input name="documents[]" type="file" multiple required accept="application/*,image/*,audio/*,video/*,.txt,.rtf,.zip,.rar"
+                                <input name="documents[]" type="file" multiple required accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/*,audio/*,video/*,.txt,.rtf"
                                     class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-indigo-800">
                                 <p class="mt-1 text-xs text-slate-400">PDF, DOC, XLS, resim, ses, video (max 50MB)</p>
                             </div>
@@ -214,7 +224,7 @@
                                 </div>
                                 <div>
                                     <label for="update_documents" class="block text-sm font-medium text-slate-700">Ek Belgeler</label>
-                                    <input id="update_documents" name="documents[]" type="file" multiple accept="application/*,image/*,audio/*,video/*,.txt,.rtf,.zip,.rar"
+                                    <input id="update_documents" name="documents[]" type="file" multiple accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/*,audio/*,video/*,.txt,.rtf"
                                         class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-indigo-800">
                                     <p class="mt-1 text-xs text-slate-400">Resim, ses, video, belge (max 50MB)</p>
                                 </div>

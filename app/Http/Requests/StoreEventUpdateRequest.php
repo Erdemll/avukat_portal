@@ -57,8 +57,6 @@ class StoreEventUpdateRequest extends FormRequest
                     'video/ogg',
                     'text/plain',
                     'text/rtf',
-                    'application/zip',
-                    'application/x-rar-compressed',
                     'application/rtf',
                 ])->extensions([
                     'pdf', 'doc', 'docx', 'xls', 'xlsx',
@@ -66,7 +64,6 @@ class StoreEventUpdateRequest extends FormRequest
                     'mp3', 'wav', 'ogg', 'm4a', 'aac',
                     'mp4', 'avi', 'mov', 'mkv', 'webm',
                     'txt', 'rtf',
-                    'zip', 'rar',
                 ])->max('50mb'),
             ],
         ];

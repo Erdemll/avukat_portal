@@ -13,7 +13,7 @@ class StoreDocumentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('view', $this->route('event')) ?? false;
+        return $this->user()?->can('createDocument', $this->route('event')) ?? false;
     }
 
     /**
@@ -54,8 +54,6 @@ class StoreDocumentRequest extends FormRequest
                     'video/ogg',
                     'text/plain',
                     'text/rtf',
-                    'application/zip',
-                    'application/x-rar-compressed',
                     'application/rtf',
                 ])->extensions([
                     'pdf', 'doc', 'docx', 'xls', 'xlsx',
@@ -63,7 +61,6 @@ class StoreDocumentRequest extends FormRequest
                     'mp3', 'wav', 'ogg', 'm4a', 'aac',
                     'mp4', 'avi', 'mov', 'mkv', 'webm',
                     'txt', 'rtf',
-                    'zip', 'rar',
                 ])->max('50mb'),
             ],
         ];

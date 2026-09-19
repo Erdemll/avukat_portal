@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -42,8 +43,13 @@ class Event extends Model
         });
 
         static::deleting(function (self $event): void {
-            $event->documents()->each(fn ($doc) => $doc->delete());
-            $event->updates()->each(fn ($update) => $update->documents()->each(fn ($doc) => $doc->delete()));
+            $event->documents()->each(fn (Document $document) => $document->delete());
+            $event->updates()->each(fn (EventUpdate $update) => $update->documents()->each(fn (Document $document) => $document->delete()));
+        });
+
+        static::restoring(function (self $event): void {
+            $event->documents()->onlyTrashed()->each(fn (Document $document) => $document->restore());
+            $event->updates()->each(fn (EventUpdate $update) => $update->documents()->onlyTrashed()->each(fn (Document $document) => $document->restore()));
         });
     }
 
@@ -81,6 +87,14 @@ class Event extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    public function caseFiles(): BelongsToMany
+    {
+        return $this->belongsToMany(CaseFile::class)
+            ->using(CaseFileEvent::class)
+            ->withPivot(['relation_type', 'linked_by', 'linked_at'])
+            ->withTimestamps();
     }
 
     public function scopeVisibleTo(Builder $query, User $user): Builder

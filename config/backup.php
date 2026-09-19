@@ -179,7 +179,7 @@ return [
          * The password to be used for archive encryption.
          * Set to `null` or leave it empty to disable encryption.
          */
-        'password' => env('BACKUP_ARCHIVE_PASSWORD'),
+        'password' => tap(env('BACKUP_ARCHIVE_PASSWORD'), fn ($pw) => throw_if($pw === '' && env('APP_ENV') === 'production', 'BACKUP_ARCHIVE_PASSWORD must be set in production')),
 
         /*
          * The encryption algorithm to be used for archive encryption.

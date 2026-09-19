@@ -1,5 +1,9 @@
 <?php
 
+use App\CaseAssignmentRole;
+use App\Models\CaseFile;
+use App\Models\CaseFileAssignment;
+use App\Models\CaseType;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Role;
@@ -76,4 +80,24 @@ function eventPayload(User $lawyer): array
         'assigned_lawyer_id' => $lawyer->id,
         'priority' => 'normal',
     ];
+}
+
+/** @param array<int, User> $lawyers */
+function legalCaseFile(User $creator, array $lawyers = []): CaseFile
+{
+    $caseFile = CaseFile::factory()->create([
+        'case_type_id' => CaseType::factory()->create(),
+        'created_by' => $creator,
+    ]);
+
+    foreach ($lawyers as $index => $lawyer) {
+        CaseFileAssignment::factory()->create([
+            'case_file_id' => $caseFile,
+            'lawyer_id' => $lawyer,
+            'role' => $index === 0 ? CaseAssignmentRole::Lead : CaseAssignmentRole::Lawyer,
+            'assigned_by' => $creator,
+        ]);
+    }
+
+    return $caseFile->refresh();
 }

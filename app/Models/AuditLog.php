@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use LogicException;
 
 class AuditLog extends Model
 {
@@ -17,13 +18,19 @@ class AuditLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'user_id', 'event_id', 'action', 'auditable_type', 'auditable_id',
+        'user_id', 'event_id', 'case_file_id', 'action', 'auditable_type', 'auditable_id',
         'description', 'old_values', 'new_values', 'ip_address', 'user_agent',
     ];
 
     protected function casts(): array
     {
         return ['action' => AuditAction::class, 'old_values' => 'array', 'new_values' => 'array', 'created_at' => 'datetime'];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(fn () => throw new LogicException('Audit kayıtları değiştirilemez.'));
+        static::deleting(fn () => throw new LogicException('Audit kayıtları silinemez.'));
     }
 
     public function user(): BelongsTo
@@ -34,6 +41,11 @@ class AuditLog extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function caseFile(): BelongsTo
+    {
+        return $this->belongsTo(CaseFile::class);
     }
 
     public function auditable(): MorphTo

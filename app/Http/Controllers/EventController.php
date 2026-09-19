@@ -18,6 +18,7 @@ use App\Services\AuditService;
 use App\Services\EventManagementService;
 use App\Services\EventNotificationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -32,7 +33,7 @@ class EventController extends Controller
             ->visibleTo($user)
             ->with(['eventType', 'creator', 'assignedLawyer'])
             ->when($request->filled('search'), function ($query) use ($request): void {
-                $search = $request->string('search')->trim()->toString();
+                $search = str_replace(['%', '_'], ['\%', '\_'], $request->string('search')->trim()->toString());
                 $query->where(function ($query) use ($search): void {
                     $query->where('event_no', 'like', '%'.$search.'%')
                         ->orWhere('title', 'like', '%'.$search.'%')
@@ -72,12 +73,16 @@ class EventController extends Controller
     public function store(StoreEventRequest $request, AuditService $audit, EventNotificationService $notifications): RedirectResponse
     {
         Gate::authorize('create', Event::class);
-        $event = new Event($request->validated());
-        $event->created_by = $request->user()->id;
-        $event->assigned_at = now();
-        $event->save();
-        $audit->safelyLog(AuditAction::EventCreated, $request->user(), $event, $event, 'Olay oluşturuldu.', [], ['event_no' => $event->event_no, 'event_type_id' => $event->event_type_id, 'assigned_lawyer_id' => $event->assigned_lawyer_id, 'title' => $event->title, 'priority' => $event->priority->value, 'system_status' => $event->system_status->value]);
-        $notifications->assigned($event->load('assignedLawyer'), $request->user());
+        $event = DB::transaction(function () use ($request, $audit, $notifications): Event {
+            $event = new Event($request->validated());
+            $event->created_by = $request->user()->id;
+            $event->assigned_at = now();
+            $event->save();
+            $audit->log(AuditAction::EventCreated, $request->user(), $event, $event, 'Olay oluşturuldu.', [], ['event_no' => $event->event_no, 'event_type_id' => $event->event_type_id, 'assigned_lawyer_id' => $event->assigned_lawyer_id, 'title' => $event->title, 'priority' => $event->priority->value, 'system_status' => $event->system_status->value]);
+            DB::afterCommit(fn () => $notifications->assigned($event->load('assignedLawyer'), $request->user()));
+
+            return $event;
+        });
 
         return redirect()->route('events.show', $event);
     }
@@ -86,7 +91,7 @@ class EventController extends Controller
     {
         Gate::authorize('view', $event);
         $event->load([
-            'creator', 'assignedLawyer', 'eventType', 'documents.uploader',
+            'creator', 'assignedLawyer', 'eventType', 'documents.uploader', 'caseFiles',
             'updates' => fn ($query) => $query->latest(),
             'updates.user', 'updates.documents.uploader',
         ]);
@@ -111,25 +116,34 @@ class EventController extends Controller
     public function update(UpdateEventRequest $request, Event $event, AuditService $audit, EventNotificationService $notifications): RedirectResponse
     {
         Gate::authorize('update', $event);
-        $oldStatus = $event->system_status;
-        $event->fill($request->validated())->save();
-        if ($event->wasChanged('system_status')) {
-            $action = $event->system_status->value === 'closed' ? AuditAction::EventClosed : AuditAction::EventStatusChanged;
-            $audit->safelyLog($action, $request->user(), $event, $event, 'Olay durumu değiştirildi.', ['system_status' => $oldStatus->value], ['system_status' => $event->system_status->value]);
-            if ($event->system_status->value === 'closed') {
-                $notifications->closed($event->load(['creator', 'assignedLawyer']), $request->user());
+        DB::transaction(function () use ($request, $event, $audit, $notifications): void {
+            $oldStatus = $event->system_status;
+            $event->fill($request->validated());
+            if ($event->isDirty('system_status')) {
+                $event->closed_at = $event->system_status === EventStatus::Closed ? now() : null;
             }
-        } else {
-            $audit->safelyLog(AuditAction::EventUpdated, $request->user(), $event, $event, 'Olay güncellendi.');
-        }
+            $event->save();
+            if ($event->wasChanged('system_status')) {
+                $action = $event->system_status->value === 'closed' ? AuditAction::EventClosed : AuditAction::EventStatusChanged;
+                $audit->log($action, $request->user(), $event, $event, 'Olay durumu değiştirildi.', ['system_status' => $oldStatus->value], ['system_status' => $event->system_status->value]);
+                if ($event->system_status->value === 'closed') {
+                    DB::afterCommit(fn () => $notifications->closed($event->load(['creator', 'assignedLawyer']), $request->user()));
+                }
+            } else {
+                $audit->log(AuditAction::EventUpdated, $request->user(), $event, $event, 'Olay güncellendi.');
+            }
+        });
 
         return redirect()->route('events.show', $event);
     }
 
-    public function destroy(Event $event): RedirectResponse
+    public function destroy(Event $event, AuditService $audit): RedirectResponse
     {
         Gate::authorize('delete', $event);
-        $event->delete();
+        DB::transaction(function () use ($event, $audit): void {
+            $audit->log(AuditAction::EventDeleted, auth()->user(), $event, $event, 'Olay silindi.', [], ['event_no' => $event->event_no, 'title' => $event->title]);
+            $event->delete();
+        });
 
         return redirect()->route('events.index');
     }

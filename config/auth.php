@@ -42,6 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'lawyer' => [
+            'driver' => 'session',
+            'provider' => 'lawyers',
+        ],
     ],
 
     /*
@@ -64,6 +68,10 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', User::class),
+        ],
+        'lawyers' => [
+            'driver' => 'sicil_no',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

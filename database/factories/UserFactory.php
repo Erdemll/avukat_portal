@@ -57,7 +57,7 @@ class UserFactory extends Factory
 
             return [
                 'role_id' => $role->id,
-                'tc_kimlik_no' => fake()->numerify('###########'),
+                'tc_kimlik_no' => fake()->unique()->regexify('[1-9][0-9]{10}'),
             ];
         });
     }

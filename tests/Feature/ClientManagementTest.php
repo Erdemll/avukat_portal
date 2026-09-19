@@ -1,0 +1,159 @@
+<?php
+
+use App\Models\Client;
+use App\Models\PartyIdentifier;
+use Illuminate\Support\Facades\DB;
+
+it('lets managers create clients with encrypted identifiers', function () {
+    $manager = userWithRole('manager');
+
+    $this->actingAs($manager)->post(route('clients.store'), [
+        'type' => 'company',
+        'company_name' => 'Tepenet Teknoloji AŞ',
+        'phone' => '0332 000 00 00',
+        'email' => 'hukuk@tepenet.test',
+        'identifier_type' => 'tax_number',
+        'identifier_value' => '1234567890',
+    ])->assertRedirect();
+
+    $client = Client::query()->with('party.identifiers')->firstOrFail();
+    $identifier = $client->party->identifiers->firstOrFail();
+    expect($client->party->company_name)->toBe('Tepenet Teknoloji AŞ');
+    expect($identifier->value)->toBe('1234567890');
+    expect(DB::table('party_identifiers')->where('id', $identifier->id)->value('value'))->not->toContain('1234567890');
+});
+
+it('renders client creation and edit forms', function () {
+    $manager = userWithRole('manager');
+    $client = Client::factory()->create(['created_by' => $manager]);
+
+    $this->actingAs($manager)->get(route('clients.create'))->assertOk()->assertSee('Yeni Müvekkil Oluştur');
+    $this->actingAs($manager)->get(route('clients.edit', $client))->assertOk()->assertSee('Müvekkili Düzenle');
+});
+
+it('does not let lawyers submit sensitive client identifiers', function () {
+    $lawyer = userWithRole('lawyer');
+
+    $this->actingAs($lawyer)->post(route('clients.store'), [
+        'type' => 'individual',
+        'name' => 'Ayşe',
+        'surname' => 'Yılmaz',
+        'identifier_type' => 'tckn',
+        'identifier_value' => '12345678901',
+    ])->assertSessionHasErrors(['identifier_type', 'identifier_value']);
+
+    expect(Client::query()->count())->toBe(0);
+    expect(PartyIdentifier::query()->count())->toBe(0);
+});
+
+it('does not flash sensitive identifiers after validation errors', function () {
+    $manager = userWithRole('manager');
+
+    $this->actingAs($manager)->post(route('clients.store'), [
+        'type' => 'company',
+        'identifier_type' => 'tax_number',
+        'identifier_value' => '1234567890',
+    ])->assertSessionHasErrors('company_name')->assertSessionMissing('_old_input.identifier_value');
+});
+
+it('updates a client without requiring the existing identifier value again', function () {
+    $manager = userWithRole('manager');
+    $client = Client::factory()->create(['created_by' => $manager]);
+    PartyIdentifier::factory()->create([
+        'party_id' => $client->party_id,
+        'created_by' => $manager,
+        'type' => 'tax_number',
+        'value' => '1234567890',
+    ]);
+    $client->refresh();
+
+    $this->actingAs($manager)->put(route('clients.update', $client), [
+        'type' => 'individual',
+        'name' => 'Güncel',
+        'surname' => 'Müvekkil',
+        'status' => 'active',
+        'identifier_type' => 'tax_number',
+        'identifier_value' => '',
+        'lock_version' => $client->lock_version,
+    ])->assertRedirect(route('clients.show', $client));
+
+    expect($client->fresh()->party->display_name)->toBe('Güncel Müvekkil');
+    expect($client->party->identifiers()->first()->value)->toBe('1234567890');
+});
+
+it('rejects duplicate identifiers and stale client updates', function () {
+    $manager = userWithRole('manager');
+    $existingIdentifier = PartyIdentifier::factory()->create([
+        'created_by' => $manager,
+        'type' => 'tax_number',
+        'value' => '1234567890',
+    ]);
+
+    $this->actingAs($manager)->post(route('clients.store'), [
+        'type' => 'company',
+        'company_name' => 'Mükerrer Kimlik AŞ',
+        'identifier_type' => 'tax_number',
+        'identifier_value' => '123 456 7890',
+    ])->assertSessionHasErrors('identifier_value');
+
+    $client = Client::factory()->create(['created_by' => $manager]);
+    $staleVersion = $client->refresh()->lock_version;
+    $client->forceFill(['lock_version' => $staleVersion + 1])->save();
+    $this->actingAs($manager)->put(route('clients.update', $client), [
+        'type' => $client->party->type->value,
+        'name' => $client->party->name,
+        'surname' => $client->party->surname,
+        'company_name' => $client->party->company_name,
+        'status' => 'active',
+        'lock_version' => $staleVersion,
+    ])->assertSessionHasErrors('lock_version');
+
+    expect($existingIdentifier->exists)->toBeTrue();
+});
+
+it('scopes clients to their creator or assigned legal cases', function () {
+    $manager = userWithRole('manager');
+    $lawyer = userWithRole('lawyer');
+    $otherLawyer = userWithRole('lawyer');
+
+    $this->actingAs($lawyer)->post(route('clients.store'), [
+        'type' => 'individual',
+        'name' => 'Mehmet',
+        'surname' => 'Kaya',
+    ])->assertRedirect();
+    $client = Client::query()->firstOrFail();
+
+    $this->actingAs($lawyer)->get(route('clients.show', $client))->assertSee('Mehmet Kaya');
+    $this->actingAs($otherLawyer)->get(route('clients.show', $client))->assertForbidden();
+    $this->actingAs($manager)->get(route('clients.show', $client))->assertSee('Mehmet Kaya');
+});
+
+it('does not render sensitive identifiers to lawyers', function () {
+    $manager = userWithRole('manager');
+    $lawyer = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$lawyer]);
+    $client = Client::factory()->create(['created_by' => $manager]);
+    PartyIdentifier::factory()->create([
+        'party_id' => $client->party_id,
+        'created_by' => $manager,
+        'value' => '12345678901',
+    ]);
+    $caseFile->parties()->attach($client->party_id, [
+        'role' => 'client',
+        'side' => 'own',
+        'is_primary' => true,
+        'added_by' => $manager->id,
+        'joined_at' => now(),
+    ]);
+
+    $this->actingAs($lawyer)->get(route('clients.show', $client))
+        ->assertOk()
+        ->assertDontSee('12345678901');
+});
+
+it('forbids employees from client management', function () {
+    $employee = userWithRole('employee');
+
+    $this->actingAs($employee)->get(route('clients.index'))->assertForbidden();
+    $this->actingAs($employee)->get(route('clients.create'))->assertForbidden();
+});

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\AuditAction;
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,11 @@ class AuditLogFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'action' => AuditAction::EventViewed,
+            'description' => fake()->sentence(),
+            'ip_address' => fake()->ipv4(),
+            'user_agent' => fake()->userAgent(),
+            'created_at' => now(),
         ];
     }
 }

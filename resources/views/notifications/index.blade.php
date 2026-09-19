@@ -19,7 +19,7 @@
         <div class="mt-6 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             @forelse($notifications as $notification)
                 <div class="group flex items-start justify-between gap-4 px-6 py-4 transition hover:bg-slate-50 {{ is_null($notification->read_at) ? 'bg-indigo-50/30' : '' }}">
-                    <a class="flex-1" href="{{ isset($notification->data['event_id']) ? route('events.show', $notification->data['event_id']) : route('notifications.index') }}">
+                    <a class="flex-1" href="{{ route('notifications.open', $notification) }}">
                         <p class="text-sm {{ is_null($notification->read_at) ? 'font-semibold text-slate-900' : 'text-slate-600' }}">
                             {{ $notification->data['message'] ?? 'Bildirim' }}
                         </p>

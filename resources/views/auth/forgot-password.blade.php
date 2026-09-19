@@ -1,46 +1,22 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Şifre Sıfırlama</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4 sm:p-6">
-    <main class="w-full max-w-md">
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-900">Şifre Sıfırlama</h1>
-            <p class="mt-2 text-sm text-slate-600">E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
-            @if(session('status'))
-                <div class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-                    {{ session('status') }}
-                </div>
-            @endif
+<x-layouts.guest
+    title="Şifre Sıfırlama"
+    eyebrow="Hesap kurtarma"
+    heading="Şifrenizi yenileyin"
+    description="Kayıtlı e-posta adresinize güvenli bir şifre sıfırlama bağlantısı göndereceğiz."
+>
+    @if(session('status'))
+        <div class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('status') }}</div>
+    @endif
 
-            <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
-                @csrf
-                <div>
-                    <label for="email" class="block text-sm font-medium text-slate-700">E-posta</label>
-                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                        class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
-                </div>
-                @error('email')
-                    <p class="text-sm text-red-600 bg-red-50 rounded-md p-3">{{ $message }}</p>
-                @enderror
-                <button type="submit"
-                    class="w-full rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
-                    Sıfırlama Bağlantısı Gönder
-                </button>
-            </form>
-
-            <div class="mt-6 text-center">
-                <a href="{{ route('login') }}" class="text-sm text-slate-600 hover:text-slate-900">
-                    ← Giriş sayfasına dön
-                </a>
-            </div>
+    <form class="grid gap-5" method="POST" action="{{ route('password.email') }}">
+        @csrf
+        <div>
+            <label class="block text-sm font-medium text-slate-700" for="email">Kurumsal e-posta</label>
+            <input class="mt-1.5 block w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" autofocus required>
+            @error('email')<p class="mt-2 text-sm text-red-700">{{ $message }}</p>@enderror
         </div>
-    </main>
-</body>
-</html>
+        <button class="w-full rounded-lg bg-indigo-900 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-800" type="submit">Sıfırlama bağlantısı gönder</button>
+    </form>
+
+    <div class="mt-5 border-t border-slate-200 pt-5 text-center"><a class="text-sm font-semibold text-indigo-700 hover:text-indigo-900" href="{{ route('login') }}">Giriş sayfasına dön</a></div>
+</x-layouts.guest>

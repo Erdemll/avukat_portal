@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CaseFile;
+use App\Models\Event;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,5 +28,32 @@ class NotificationController extends Controller
         $request->user()->unreadNotifications->markAsRead();
 
         return back();
+    }
+
+    public function open(Request $request, string $notification): RedirectResponse
+    {
+        $notification = $request->user()->notifications()->findOrFail($notification);
+        $notification->markAsRead();
+        $data = $notification->data;
+
+        if (in_array($data['type'] ?? null, ['case_assignment_requested', 'case_assignment_decided'], true)) {
+            return redirect()->route('assignment-requests.index');
+        }
+        if (isset($data['case_file_id'])) {
+            $caseFile = CaseFile::query()->find($data['case_file_id']);
+            if ($caseFile !== null && $request->user()->can('view', $caseFile)) {
+                return ($data['type'] ?? null) === 'financial_entry_created'
+                    ? redirect()->route('financial-entries.index', ['case_file' => $caseFile->id])
+                    : redirect()->route('case-files.show', $caseFile);
+            }
+        }
+        if (isset($data['event_id'])) {
+            $event = Event::query()->find($data['event_id']);
+            if ($event !== null && $request->user()->can('view', $event)) {
+                return redirect()->route('events.show', $event);
+            }
+        }
+
+        return redirect()->route('notifications.index')->withErrors(['notification' => 'Bu bildirimin kaynağına artık erişiminiz yok.']);
     }
 }

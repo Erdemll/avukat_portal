@@ -36,6 +36,13 @@ class EventPolicy
         return $user->isManager() || ($user->isLawyer() && $event->assigned_lawyer_id === $user->id);
     }
 
+    public function createDocument(User $user, Event $event): bool
+    {
+        return $user->isManager()
+            || ($user->isEmployee() && $event->created_by === $user->id)
+            || ($user->isLawyer() && $event->assigned_lawyer_id === $user->id);
+    }
+
     /**
      * Determine whether the user can update the model.
      */
