@@ -179,7 +179,11 @@ return [
          * The password to be used for archive encryption.
          * Set to `null` or leave it empty to disable encryption.
          */
-        'password' => tap(env('BACKUP_ARCHIVE_PASSWORD'), fn ($pw) => throw_if($pw === '' && env('APP_ENV') === 'production', 'BACKUP_ARCHIVE_PASSWORD must be set in production')),
+        'password' => tap(env('BACKUP_ARCHIVE_PASSWORD'), fn ($password) => throw_if(
+            env('APP_ENV') === 'production'
+            && (! is_string($password) || trim($password) === '' || $password === 'change-me-in-production'),
+            'BACKUP_ARCHIVE_PASSWORD must be a non-placeholder value in production',
+        )),
 
         /*
          * The encryption algorithm to be used for archive encryption.
@@ -195,7 +199,7 @@ return [
          * After creating the zip, verify it can be opened and contains files.
          * Recommended for critical backups but adds a small overhead.
          */
-        'verify_backup' => false,
+        'verify_backup' => env('BACKUP_VERIFY', false),
 
         /*
          * The number of attempts, in case the backup command encounters an exception
@@ -294,7 +298,7 @@ return [
     'monitor_backups' => [
         [
             'name' => env('APP_NAME', 'laravel-backup'),
-            'disks' => ['local'],
+            'disks' => [env('BACKUP_DISK', 'local')],
             'health_checks' => [
                 MaximumAgeInDays::class => 1,
                 MaximumStorageInMegabytes::class => 5000,
