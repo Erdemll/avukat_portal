@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignId('reversal_of_id')->nullable()->unique()->constrained('case_financial_entries')->restrictOnDelete();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->timestamps();
-            $table->index(['case_file_id', 'currency', 'transaction_date']);
+            $table->index(['case_file_id', 'currency', 'transaction_date'], 'cf_entries_case_currency_date_idx');
             $table->index(['type', 'transaction_date']);
         });
     }

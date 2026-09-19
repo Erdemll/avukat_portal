@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['case_file_id', 'ended_at']);
             $table->index(['lawyer_id', 'ended_at']);
-            $table->unique(['case_file_id', 'lawyer_id', 'active_marker']);
+            $table->unique(['case_file_id', 'lawyer_id', 'active_marker'], 'cf_assignments_active_unique');
             $table->unique(['case_file_id', 'active_lead_marker']);
         });
     }

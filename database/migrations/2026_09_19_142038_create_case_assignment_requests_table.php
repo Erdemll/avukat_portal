@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamp('reviewed_at')->nullable();
             $table->text('decision_note')->nullable();
             $table->timestamps();
-            $table->unique(['case_file_id', 'requested_by', 'type', 'active_marker']);
+            $table->unique(['case_file_id', 'requested_by', 'type', 'active_marker'], 'cf_assignment_requests_pending_unique');
             $table->index(['status', 'created_at']);
             $table->index(['requested_to', 'status']);
         });

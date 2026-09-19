@@ -11,6 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('case_file_parties')) {
+            $needsActiveUnique = ! Schema::hasIndex('case_file_parties', 'cf_parties_active_unique');
+            $needsSideIndex = ! Schema::hasIndex('case_file_parties', 'cf_parties_side_active_idx');
+
+            Schema::table('case_file_parties', function (Blueprint $table) use ($needsActiveUnique, $needsSideIndex) {
+                if ($needsActiveUnique) {
+                    $table->unique(['case_file_id', 'party_id', 'role', 'active_marker'], 'cf_parties_active_unique');
+                }
+
+                if ($needsSideIndex) {
+                    $table->index(['case_file_id', 'side', 'left_at'], 'cf_parties_side_active_idx');
+                }
+            });
+
+            return;
+        }
+
         Schema::create('case_file_parties', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_file_id')->constrained()->restrictOnDelete();
@@ -23,8 +40,8 @@ return new class extends Migration
             $table->timestamp('left_at')->nullable();
             $table->boolean('active_marker')->nullable()->default(true);
             $table->timestamps();
-            $table->unique(['case_file_id', 'party_id', 'role', 'active_marker']);
-            $table->index(['case_file_id', 'side', 'left_at']);
+            $table->unique(['case_file_id', 'party_id', 'role', 'active_marker'], 'cf_parties_active_unique');
+            $table->index(['case_file_id', 'side', 'left_at'], 'cf_parties_side_active_idx');
         });
     }
 
