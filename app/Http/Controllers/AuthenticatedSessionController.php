@@ -42,7 +42,6 @@ class AuthenticatedSessionController extends Controller
             return back()->withErrors(['sicil_no' => 'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.'])->onlyInput('sicil_no');
         }
 
-        $genericError = back()->withErrors(['sicil_no' => 'Sicil numarası veya şifre hatalı.'])->onlyInput('sicil_no');
         $user = User::query()
             ->where('tc_kimlik_no', $sicilNo->toString())
             ->whereHas('role', fn ($query) => $query->where('slug', 'lawyer'))
@@ -60,7 +59,7 @@ class AuthenticatedSessionController extends Controller
                 $audit->safelyLog(AuditAction::UserLoginFailed, null, description: 'Başarısız giriş denemesi (avukat): '.substr($sicilNo, 0, 3).'***');
             }
 
-            return $genericError;
+            return back()->withErrors(['sicil_no' => 'Sicil numarası veya şifre hatalı.'])->onlyInput('sicil_no');
         }
 
         $limiter->clear($key);
@@ -80,24 +79,22 @@ class AuthenticatedSessionController extends Controller
         $credentials = $request->safe()->only(['email', 'password']);
         $user = User::query()->where('email', $credentials['email'])->first();
 
-        $genericError = back()->withErrors(['email' => 'E-posta adresi veya şifre hatalı.'])->onlyInput('email');
-
         if ($user === null) {
             $audit->safelyLog(AuditAction::UserLoginFailed, null, description: 'Başarısız giriş denemesi: '.Str::mask($credentials['email'], '*', 3));
 
-            return $genericError;
+            return back()->withErrors(['email' => 'E-posta adresi veya şifre hatalı.'])->onlyInput('email');
         }
 
         if (! $user->is_active) {
             $audit->safelyLog(AuditAction::UserLoginFailed, $user, description: 'Pasif hesapla giriş denemesi: '.Str::mask($credentials['email'], '*', 3));
 
-            return $genericError;
+            return back()->withErrors(['email' => 'E-posta adresi veya şifre hatalı.'])->onlyInput('email');
         }
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             $audit->safelyLog(AuditAction::UserLoginFailed, $user, description: 'Başarısız giriş denemesi: '.Str::mask($credentials['email'], '*', 3));
 
-            return $genericError;
+            return back()->withErrors(['email' => 'E-posta adresi veya şifre hatalı.'])->onlyInput('email');
         }
 
         if ($request->user()->hasTwoFactorAuthenticationEnabled()) {

@@ -72,7 +72,9 @@ it('scopes notification reads to the authenticated user', function () {
 it('audits successful and failed authentication without storing passwords', function () {
     $user = userWithRole('employee');
     $user->forceFill(['email' => 'audit@example.com', 'password' => 'Password123!'])->save();
-    $this->post('/login', ['email' => $user->email, 'password' => 'Password123!'])->assertRedirect();
+    $this->post('/login', ['email' => $user->email, 'password' => 'Password123!'])
+        ->assertRedirect()
+        ->assertSessionDoesntHaveErrors();
     expect(AuditLog::query()->where('action', AuditAction::UserLogin)->exists())->toBeTrue();
     Auth::logout();
     $this->post('/login', ['email' => $user->email, 'password' => 'wrong-password'])->assertSessionHasErrors('email');

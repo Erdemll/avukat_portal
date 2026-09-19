@@ -21,7 +21,7 @@ it('authenticates lawyers on the web guard with their registry number', function
         'login_type' => 'lawyer',
         'sicil_no' => '12345678901',
         'password' => 'StrongPassword123',
-    ])->assertRedirect(route('case-files.index'));
+    ])->assertRedirect(route('case-files.index'))->assertSessionDoesntHaveErrors();
 
     $this->assertAuthenticatedAs($lawyer);
     $this->get(route('events.index'))->assertOk();
