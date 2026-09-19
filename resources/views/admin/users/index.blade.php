@@ -12,8 +12,8 @@
         </a>
     </div>
 
-    <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+    <div class="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table class="min-w-[64rem] divide-y divide-slate-200 text-left text-sm">
             <thead class="bg-slate-50">
                 <tr>
                     <th class="px-4 py-3 font-medium text-slate-500">Ad</th>

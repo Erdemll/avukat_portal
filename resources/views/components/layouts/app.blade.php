@@ -17,7 +17,7 @@
     }
 
     $operationNavigation = $isLegalUser ? [
-        ['label' => 'Evraklar', 'url' => route('legal-documents.index'), 'active' => ['legal-documents.*', 'document-versions.*'], 'icon' => 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5V5.625A3.375 3.375 0 0 0 11.25 2.25H6.375A3.375 3.375 0 0 0 3 5.625v12.75a3.375 3.375 0 0 0 3.375 3.375h7.5A3.375 3.375 0 0 0 17.625 18v-1.5m-6.375-14.25V5.625A3.375 3.375 0 0 0 14.625 9h3.375'],
+        ['label' => 'Evraklar', 'url' => route('legal-documents.index'), 'active' => ['legal-documents.*', 'document-versions.*', 'documents.udf.*'], 'icon' => 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5V5.625A3.375 3.375 0 0 0 11.25 2.25H6.375A3.375 3.375 0 0 0 3 5.625v12.75a3.375 3.375 0 0 0 3.375 3.375h7.5A3.375 3.375 0 0 0 17.625 18v-1.5m-6.375-14.25V5.625A3.375 3.375 0 0 0 14.625 9h3.375'],
         ['label' => 'Hukuki Takvim', 'url' => route('legal-calendar.index'), 'active' => ['legal-calendar.*'], 'icon' => 'M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75v12A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75v-12A2.25 2.25 0 0 1 5.25 4.5Z'],
         ['label' => 'Duruşmalar', 'url' => route('hearings.index'), 'active' => ['hearings.*'], 'icon' => 'M12 3v18m9-9H3m3.75-6.75L3 12l3.75 6.75m10.5-13.5L21 12l-3.75 6.75'],
         ['label' => 'Süreler', 'url' => route('deadlines.index'), 'active' => ['deadlines.*'], 'icon' => 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],

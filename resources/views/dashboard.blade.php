@@ -18,7 +18,7 @@
     </div>
 
     {{-- Stats cards --}}
-    <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7">
+    <div class="mt-6 grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7">
         {{-- Total --}}
         <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div class="flex items-center gap-2">
@@ -101,18 +101,18 @@
 
     {{-- Recent events --}}
     <section class="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-4 sm:px-6">
             <h2 class="text-base font-semibold text-slate-900">{{ $user->isManager() ? 'Son Oluşturulan Olaylar' : 'Son Güncellenen Olaylar' }}</h2>
             <a class="text-sm font-medium text-indigo-600 hover:text-indigo-700" href="{{ route('events.index') }}">Tümünü Gör →</a>
         </div>
         <div class="divide-y divide-slate-100">
             @forelse($recentEvents as $event)
-                <a class="block px-6 py-4 transition hover:bg-slate-50" href="{{ route('events.show', $event) }}">
+                <a class="block px-4 py-4 transition hover:bg-slate-50 sm:px-6" href="{{ route('events.show', $event) }}">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <span class="font-mono text-xs font-medium text-indigo-600">{{ $event->event_no }}</span>
-                                <span class="text-sm font-medium text-slate-900">{{ $event->title }}</span>
+                                <span class="break-words text-sm font-medium text-slate-900">{{ $event->title }}</span>
                             </div>
                             <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                 <span>{{ $event->eventType->name }}</span>
@@ -173,7 +173,7 @@
                     @forelse($recentUpdates as $update)
                         <a class="block px-6 py-4 transition hover:bg-slate-50" href="{{ route('events.show', $update->event) }}">
                             <p class="text-sm font-medium text-slate-900">{{ $update->title ?: 'Süreç güncellemesi' }}</p>
-                            <div class="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                            <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                 <span class="font-mono font-medium text-indigo-600">{{ $update->event->event_no }}</span>
                                 <span class="text-slate-300">·</span>
                                 <span>{{ $update->user->name }}</span>

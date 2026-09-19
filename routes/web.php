@@ -35,6 +35,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\ServiceNoticeController;
 use App\Http\Controllers\TwoFactorChallengeController;
+use App\Http\Controllers\UdfDocumentController;
 use App\Http\Controllers\UyapImportController;
 use Illuminate\Support\Facades\Route;
 
@@ -72,6 +73,10 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/case-files/{caseFile}/document-folders', [DocumentFolderController::class, 'store'])->name('case-files.document-folders.store');
     Route::resource('clients', ClientController::class)->except(['destroy']);
     Route::get('/documents', LegalDocumentController::class)->name('legal-documents.index');
+    Route::get('/documents/{document}/udf', [UdfDocumentController::class, 'show'])->name('documents.udf.show');
+    Route::get('/documents/{document}/udf/edit', [UdfDocumentController::class, 'edit'])->name('documents.udf.edit');
+    Route::put('/documents/{document}/udf', [UdfDocumentController::class, 'update'])->name('documents.udf.update');
+    Route::get('/documents/{document}/udf/download', [UdfDocumentController::class, 'download'])->name('documents.udf.download');
     Route::post('/documents/{document}/versions', [DocumentVersionController::class, 'store'])->name('document-versions.store');
     Route::get('/document-versions/{documentVersion}/download', [DocumentVersionController::class, 'download'])->name('document-versions.download');
     Route::get('/document-versions/{documentVersion}/preview', [DocumentVersionController::class, 'preview'])->name('document-versions.preview');

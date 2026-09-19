@@ -3,10 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\DocumentFolder;
+use App\Services\Udf\UdfArchiveService;
+use App\Services\Udf\UdfException;
+use App\Services\Udf\UdfParser;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
+use Illuminate\Validation\Validator;
 
 class StoreCaseFileDocumentRequest extends FormRequest
 {
@@ -44,6 +48,35 @@ class StoreCaseFileDocumentRequest extends FormRequest
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'image/jpeg',
             'image/png',
-        ])->extensions(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'])->max('50mb');
+            'application/zip',
+            'application/octet-stream',
+        ])->extensions(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'udf'])->max('50mb');
+    }
+
+    /** @return array<int, callable(Validator): void> */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            foreach ($this->file('documents', []) as $index => $file) {
+                if (mb_strtolower($file->getClientOriginalExtension()) !== 'udf') {
+                    continue;
+                }
+
+                try {
+                    $archive = app(UdfArchiveService::class)->readLocal($file->getRealPath());
+                    app(UdfParser::class)->parse($archive['content_xml']);
+                } catch (UdfException $exception) {
+                    $validator->errors()->add("documents.{$index}", $exception->getMessage());
+                }
+            }
+        }];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'documents.*.extensions' => 'Dosya uzantısı desteklenmiyor. UDF yüklemek için dosya adının yalnız .udf ile bittiğini ve .udf.zip olmadığını kontrol edin.',
+        ];
     }
 }

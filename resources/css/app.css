@@ -108,6 +108,8 @@
     input:not([type='checkbox']):not([type='radio']),
     select,
     textarea {
+        max-width: 100%;
+        min-width: 0;
         min-height: 2.75rem;
         border-color: var(--color-slate-300);
         background-color: var(--color-white);
@@ -147,6 +149,11 @@
     table th {
         letter-spacing: 0.035em;
     }
+
+    pre,
+    code {
+        max-width: 100%;
+    }
 }
 
 @layer components {
@@ -184,5 +191,66 @@
 
     .portal-icon-button:hover {
         @apply border-slate-300 bg-slate-50 text-slate-800;
+    }
+
+    .udf-paper {
+        width: min(100%, 52rem);
+        min-height: 46rem;
+        border: 1px solid var(--color-slate-200);
+        background: var(--color-white);
+        box-shadow: 0 12px 35px rgb(25 36 31 / 0.08);
+    }
+
+    .udf-editor-content {
+        min-height: 46rem;
+        padding: clamp(1.5rem, 5vw, 4.5rem);
+        color: var(--color-slate-950);
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12pt;
+        line-height: 1.55;
+        outline: none;
+        overflow-wrap: anywhere;
+    }
+
+    .udf-editor-content p {
+        min-height: 1.55em;
+        white-space: pre-wrap;
+    }
+
+    .udf-editor-content ul {
+        list-style: disc;
+        padding-left: 1.75rem;
+    }
+
+    .udf-editor-content ol {
+        list-style: decimal;
+        padding-left: 1.75rem;
+    }
+
+    .udf-editor-content hr {
+        margin-block: 1.25rem;
+        border-color: var(--color-slate-300);
+    }
+
+    .udf-editor-content table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .udf-editor-content td {
+        min-width: 5rem;
+        border: 1px solid var(--color-slate-400);
+        padding: 0.45rem;
+        vertical-align: top;
+    }
+
+    .udf-tool-button {
+        @apply inline-flex min-h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700;
+    }
+
+    .udf-tool-button:hover,
+    .udf-tool-button[data-active='true'] {
+        @apply border-indigo-300 bg-indigo-50 text-indigo-800;
     }
 }

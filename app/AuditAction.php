@@ -21,6 +21,11 @@ enum AuditAction: string
     case DocumentDeleted = 'DOCUMENT_DELETED';
     case DocumentFolderCreated = 'DOCUMENT_FOLDER_CREATED';
     case DocumentVersionUploaded = 'DOCUMENT_VERSION_UPLOADED';
+    case UdfViewed = 'UDF_VIEWED';
+    case UdfEditStarted = 'UDF_EDIT_STARTED';
+    case UdfVersionCreated = 'UDF_VERSION_CREATED';
+    case UdfDownloaded = 'UDF_DOWNLOADED';
+    case UdfParseFailed = 'UDF_PARSE_FAILED';
     case HearingCreated = 'HEARING_CREATED';
     case HearingUpdated = 'HEARING_UPDATED';
     case DeadlineCreated = 'DEADLINE_CREATED';

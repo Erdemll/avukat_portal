@@ -8,43 +8,43 @@
 
     <div class="mt-4 max-w-3xl">
         <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div class="border-b border-slate-100 px-6 py-5">
+            <div class="border-b border-slate-100 px-4 py-5 sm:px-6">
                 <span class="font-mono text-sm font-bold text-indigo-600">{{ $auditLog->action->value }}</span>
-                <p class="mt-2 text-sm text-slate-700">{{ $auditLog->description }}</p>
+                <p class="mt-2 break-words text-sm text-slate-700">{{ $auditLog->description }}</p>
             </div>
 
-            <div class="px-6 py-5">
+            <div class="px-4 py-5 sm:px-6">
                 <dl class="grid gap-4 rounded-lg bg-slate-50 p-4 text-sm">
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid gap-1 sm:grid-cols-3 sm:gap-2">
                         <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Tarih</dt>
-                        <dd class="col-span-2 text-slate-900">{{ $auditLog->created_at->format('d.m.Y H:i:s') }}</dd>
+                        <dd class="text-slate-900 sm:col-span-2">{{ $auditLog->created_at->format('d.m.Y H:i:s') }}</dd>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid gap-1 sm:grid-cols-3 sm:gap-2">
                         <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Kullanıcı</dt>
-                        <dd class="col-span-2 font-medium text-slate-900">{{ $auditLog->user?->name ?: '-' }}</dd>
+                        <dd class="break-words font-medium text-slate-900 sm:col-span-2">{{ $auditLog->user?->name ?: '-' }}</dd>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid gap-1 sm:grid-cols-3 sm:gap-2">
                         <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">IP Adresi</dt>
-                        <dd class="col-span-2 font-mono text-sm text-slate-700">{{ $auditLog->ip_address ?: '-' }}</dd>
+                        <dd class="break-all font-mono text-sm text-slate-700 sm:col-span-2">{{ $auditLog->ip_address ?: '-' }}</dd>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid gap-1 sm:grid-cols-3 sm:gap-2">
                         <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">User Agent</dt>
-                        <dd class="col-span-2 text-xs text-slate-600">{{ $auditLog->user_agent ?: '-' }}</dd>
+                        <dd class="break-all text-xs text-slate-600 sm:col-span-2">{{ $auditLog->user_agent ?: '-' }}</dd>
                     </div>
                     @if($auditLog->event)
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid gap-1 sm:grid-cols-3 sm:gap-2">
                             <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">İlgili Olay</dt>
-                            <dd class="col-span-2">
-                                <a class="font-medium text-indigo-600 hover:underline" href="{{ route('events.show', $auditLog->event) }}">
+                            <dd class="min-w-0 sm:col-span-2">
+                                <a class="break-words font-medium text-indigo-600 hover:underline" href="{{ route('events.show', $auditLog->event) }}">
                                     {{ $auditLog->event->event_no }} · {{ $auditLog->event->title }}
                                 </a>
                             </dd>
                         </div>
                     @endif
                     @if($auditLog->auditable)
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid gap-1 sm:grid-cols-3 sm:gap-2">
                             <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Model</dt>
-                            <dd class="col-span-2 font-mono text-sm text-slate-700">{{ class_basename($auditLog->auditable) }} #{{ $auditLog->auditable_id }}</dd>
+                            <dd class="break-all font-mono text-sm text-slate-700 sm:col-span-2">{{ class_basename($auditLog->auditable) }} #{{ $auditLog->auditable_id }}</dd>
                         </div>
                     @endif
                 </dl>

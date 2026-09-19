@@ -99,7 +99,9 @@ class CaseDocumentService
     /** @return array{original_name: string, stored_name: string, disk: string, path: string, mime_type: string, extension: ?string, size: int, sha256: string} */
     private function storeFile(CaseFile $caseFile, UploadedFile $file): array
     {
-        $extension = $file->extension();
+        $extension = mb_strtolower($file->getClientOriginalExtension()) === 'udf'
+            ? 'udf'
+            : $file->extension();
         $storedName = Str::uuid().($extension === '' ? '' : '.'.$extension);
         $path = Storage::disk('legal_private')->putFileAs('case-files/'.$caseFile->id, $file, $storedName);
         if (! is_string($path)) {

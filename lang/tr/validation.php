@@ -17,6 +17,7 @@ return [
     'email' => ':attribute geçerli bir e-posta adresi olmalıdır.',
     'enum' => 'Seçilen :attribute geçersiz.',
     'exists' => 'Seçilen :attribute geçersiz.',
+    'extensions' => ':attribute şu uzantılardan biri olmalıdır: :values.',
     'file' => ':attribute bir dosya olmalıdır.',
     'gt' => [
         'array' => ':attribute, :value adetten fazla öğe içermelidir.',

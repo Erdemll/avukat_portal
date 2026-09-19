@@ -105,4 +105,9 @@ class Document extends Model
                 ->orWhereHas('event', fn (Builder $events) => $events->visibleTo($user));
         });
     }
+
+    public function isUdf(): bool
+    {
+        return mb_strtolower((string) $this->extension) === 'udf';
+    }
 }
