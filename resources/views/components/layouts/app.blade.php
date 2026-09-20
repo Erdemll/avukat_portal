@@ -143,7 +143,7 @@
                                 <svg class="h-5 w-5 group-open:hidden" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
                                 <svg class="hidden h-5 w-5 group-open:block" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                             </summary>
-                            <div class="fixed inset-x-0 bottom-0 top-16 overflow-y-auto border-t border-slate-200 bg-[#f4f3ef] px-4 py-5 sm:px-6">
+                            <div class="absolute inset-x-0 top-full h-[calc(100dvh-4rem)] overscroll-contain overflow-y-auto border-t border-slate-200 bg-[#f4f3ef] px-4 py-5 sm:px-6">
                                 <div class="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
                                     <span class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-800">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span>
                                     <div class="min-w-0"><p class="truncate font-semibold text-slate-900">{{ $user->name }}</p><p class="text-xs text-slate-500">{{ $user->role->name }}</p></div>
