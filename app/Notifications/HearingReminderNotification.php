@@ -4,16 +4,11 @@ namespace App\Notifications;
 
 use App\Models\Hearing;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Gate;
 
-class HearingReminderNotification extends Notification implements ShouldQueue
+class HearingReminderNotification extends LegalActivityNotification
 {
-    use Queueable;
-
     public int $tries = 3;
 
     public int $timeout = 60;
@@ -21,16 +16,6 @@ class HearingReminderNotification extends Notification implements ShouldQueue
     public function __construct(private Hearing $hearing)
     {
         $this->afterCommit();
-    }
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     public function shouldSend(object $notifiable, string $channel): bool

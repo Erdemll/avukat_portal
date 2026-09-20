@@ -48,6 +48,12 @@ class ApplySecurityHeaders
             'form-action' => ["'self'"],
         ];
 
+        $reverbOrigin = $this->reverbWebsocketOrigin();
+
+        if ($reverbOrigin !== null) {
+            $directives['connect-src'][] = $reverbOrigin;
+        }
+
         $viteOrigins = $this->viteDevelopmentOrigins();
 
         if ($viteOrigins !== null) {
@@ -59,10 +65,31 @@ class ApplySecurityHeaders
         }
 
         return implode(' ', array_map(
-            fn (string $directive, array $sources): string => $directive.' '.implode(' ', $sources).';',
+            fn (string $directive, array $sources): string => $directive.' '.implode(' ', array_unique($sources)).';',
             array_keys($directives),
             $directives,
         ));
+    }
+
+    private function reverbWebsocketOrigin(): ?string
+    {
+        $host = config('broadcasting.connections.reverb.options.host');
+        $port = config('broadcasting.connections.reverb.options.port');
+        $scheme = config('broadcasting.connections.reverb.options.scheme', 'https');
+
+        if (! is_string($host) || $host === '') {
+            return null;
+        }
+
+        $websocketScheme = $scheme === 'https' ? 'wss' : 'ws';
+
+        $defaultPort = $websocketScheme === 'wss' ? 443 : 80;
+
+        $portSuffix = is_numeric($port) && (int) $port !== $defaultPort
+            ? ':'.$port
+            : '';
+
+        return $websocketScheme.'://'.$host.$portSuffix;
     }
 
     /**
@@ -77,9 +104,11 @@ class ApplySecurityHeaders
         $viteUrl = trim((string) file_get_contents(Vite::hotFile()));
         $parts = parse_url($viteUrl);
 
-        if (! is_array($parts)
+        if (
+            ! is_array($parts)
             || ! in_array($parts['scheme'] ?? null, ['http', 'https'], true)
-            || empty($parts['host'])) {
+            || empty($parts['host'])
+        ) {
             return null;
         }
 

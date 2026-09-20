@@ -5,31 +5,16 @@ namespace App\Notifications;
 use App\CaseAssignmentRequestStatus;
 use App\Models\CaseAssignmentRequest;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
-class CaseAssignmentRequestCreatedNotification extends Notification implements ShouldQueue
+class CaseAssignmentRequestCreatedNotification extends LegalActivityNotification
 {
-    use Queueable;
-
     /**
      * Create a new notification instance.
      */
     public function __construct(private CaseAssignmentRequest $request)
     {
         $this->afterCommit();
-    }
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     /**

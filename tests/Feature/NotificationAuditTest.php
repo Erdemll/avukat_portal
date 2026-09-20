@@ -3,13 +3,54 @@
 use App\AuditAction;
 use App\Models\AuditLog;
 use App\Models\Document;
+use App\Notifications\CaseAssignmentRequestCreatedNotification;
+use App\Notifications\CaseAssignmentRequestDecidedNotification;
+use App\Notifications\CaseDocumentsUploadedNotification;
+use App\Notifications\CaseDocumentVersionUploadedNotification;
+use App\Notifications\CaseFileAssignedNotification;
+use App\Notifications\DeadlineReminderNotification;
 use App\Notifications\DocumentUploadedNotification;
 use App\Notifications\EventAssignedNotification;
+use App\Notifications\EventClosedNotification;
 use App\Notifications\EventUpdatedNotification;
+use App\Notifications\FinancialEntryCreatedNotification;
+use App\Notifications\HearingReminderNotification;
+use App\Notifications\LegalActivityNotification;
+use App\Notifications\MessageReceivedNotification;
+use App\Notifications\ServiceNoticeCreatedNotification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+
+it('queues every legal activity notification for database and mail while keeping chat app only', function () {
+    $legalActivityNotifications = [
+        CaseAssignmentRequestCreatedNotification::class,
+        CaseAssignmentRequestDecidedNotification::class,
+        CaseDocumentsUploadedNotification::class,
+        CaseDocumentVersionUploadedNotification::class,
+        CaseFileAssignedNotification::class,
+        DeadlineReminderNotification::class,
+        DocumentUploadedNotification::class,
+        EventAssignedNotification::class,
+        EventClosedNotification::class,
+        EventUpdatedNotification::class,
+        FinancialEntryCreatedNotification::class,
+        HearingReminderNotification::class,
+        ServiceNoticeCreatedNotification::class,
+    ];
+
+    foreach ($legalActivityNotifications as $notificationClass) {
+        expect(is_subclass_of($notificationClass, LegalActivityNotification::class))->toBeTrue();
+        expect(is_subclass_of($notificationClass, ShouldQueue::class))->toBeTrue();
+    }
+
+    $lawyer = userWithRole('lawyer');
+    $messageNotification = new MessageReceivedNotification(1, 2, 'Gönderen Avukat');
+
+    expect($messageNotification->via($lawyer))->toBe(['database']);
+});
 
 it('notifies the assigned active lawyer and audits event creation', function () {
     Notification::fake();

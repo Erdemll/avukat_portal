@@ -50,6 +50,20 @@ class User extends Authenticatable
         return $this->hasMany(EventUpdate::class);
     }
 
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->using(ConversationParticipant::class)
+            ->as('participation')
+            ->withPivot(['id', 'joined_at', 'last_read_at'])
+            ->withTimestamps();
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
     public function uploadedDocuments(): HasMany
     {
         return $this->hasMany(Document::class, 'uploaded_by');

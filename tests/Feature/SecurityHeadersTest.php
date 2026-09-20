@@ -16,7 +16,7 @@ it('ignores IPv6 Vite origins that browsers reject in CSP host sources', functio
         expect($policy)
             ->not->toContain('[::1]')
             ->toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval';")
-            ->toContain("connect-src 'self';");
+            ->toContain("connect-src 'self' wss://ws.tepenetguvenlik.com;");
     } finally {
         unlink($hotFile);
     }
@@ -37,7 +37,7 @@ it('allows the IPv4 Vite development server in the local CSP', function () {
             ->toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval' http://127.0.0.1:5173;")
             ->toContain("style-src 'self' 'unsafe-inline' http://127.0.0.1:5173;")
             ->toContain("font-src 'self' data: http://127.0.0.1:5173;")
-            ->toContain("connect-src 'self' http://127.0.0.1:5173 ws://127.0.0.1:5173;");
+            ->toContain("connect-src 'self' wss://ws.tepenetguvenlik.com http://127.0.0.1:5173 ws://127.0.0.1:5173;");
     } finally {
         unlink($hotFile);
     }

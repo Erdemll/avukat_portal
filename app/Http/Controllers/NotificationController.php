@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CaseFile;
+use App\Models\Conversation;
 use App\Models\Event;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,14 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->findOrFail($notification);
         $notification->markAsRead();
         $data = $notification->data;
+
+        if (($data['type'] ?? null) === 'message_received' && isset($data['conversation_id'])) {
+            $conversation = Conversation::query()->find($data['conversation_id']);
+
+            if ($conversation !== null && $request->user()->can('view', $conversation)) {
+                return redirect()->route('messages.index', ['conversation' => $conversation->id]);
+            }
+        }
 
         if (in_array($data['type'] ?? null, ['case_assignment_requested', 'case_assignment_decided'], true)) {
             return redirect()->route('assignment-requests.index');

@@ -16,6 +16,10 @@
         ];
     }
 
+    if ($user->isLawyer()) {
+        $coreNavigation[] = ['label' => 'Mesajlar', 'url' => route('messages.index'), 'active' => ['messages.*'], 'icon' => 'M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.142-4.03 7.5-9 7.5a10.22 10.22 0 0 1-4.38-.968L3 20.25l1.337-3.342C3.49 15.564 3 13.887 3 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5Z'];
+    }
+
     $operationNavigation = $isLegalUser ? [
         ['label' => 'Evraklar', 'url' => route('legal-documents.index'), 'active' => ['legal-documents.*', 'document-versions.*', 'documents.udf.*'], 'icon' => 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5V5.625A3.375 3.375 0 0 0 11.25 2.25H6.375A3.375 3.375 0 0 0 3 5.625v12.75a3.375 3.375 0 0 0 3.375 3.375h7.5A3.375 3.375 0 0 0 17.625 18v-1.5m-6.375-14.25V5.625A3.375 3.375 0 0 0 14.625 9h3.375'],
         ['label' => 'Hukuki Takvim', 'url' => route('legal-calendar.index'), 'active' => ['legal-calendar.*'], 'icon' => 'M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75v12A2.25 2.25 0 0 1 18.75 21H5.25A2.25 2.25 0 0 1 3 18.75v-12A2.25 2.25 0 0 1 5.25 4.5Z'],
@@ -54,7 +58,7 @@
     <title>{{ $title ? $title.' · ' : '' }}{{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full antialiased">
+<body class="min-h-full antialiased" data-auth-user-id="{{ $user->id }}" data-messages-url="{{ route('messages.index') }}">
     <div class="min-h-svh lg:grid lg:grid-cols-[17.5rem_minmax(0,1fr)]">
         <aside class="sticky top-0 hidden h-svh flex-col border-r border-slate-200 bg-white lg:flex" aria-label="Ana menü">
             <div class="flex h-20 items-center border-b border-slate-200 px-5">
@@ -121,18 +125,18 @@
                             <a class="portal-icon-button hidden sm:inline-flex" href="{{ route('search.index') }}" title="Gelişmiş arama"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m1.35-5.4a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z" /></svg></a>
                         @endif
 
-                        <details class="relative">
+                        <details class="relative" data-notification-center>
                             <summary class="portal-icon-button cursor-pointer" aria-label="Bildirimleri aç">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
-                                @if($navbarUnreadCount)<span class="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full border-2 border-[#f4f3ef] bg-red-600 px-1 text-[0.65rem] font-semibold leading-4 text-white">{{ $navbarUnreadCount }}</span>@endif
+                                <span class="absolute -right-1 -top-1 {{ $navbarUnreadCount ? 'inline-flex' : 'hidden' }} min-w-5 items-center justify-center rounded-full border-2 border-[#f4f3ef] bg-red-600 px-1 text-[0.65rem] font-semibold leading-4 text-white" data-notification-count aria-label="{{ $navbarUnreadCount }} okunmamış bildirim">{{ $navbarUnreadCount }}</span>
                             </summary>
-                            <div class="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                            <div class="fixed inset-x-4 top-16 z-50 mt-2 max-h-[calc(100svh-5rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:w-[calc(100vw-2rem)] sm:max-w-sm">
                                 <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3"><strong class="font-serif text-base text-slate-900">Bildirimler</strong><a class="text-xs font-semibold text-indigo-700" href="{{ route('notifications.index') }}">Tümünü gör</a></div>
-                                <ul class="max-h-96 divide-y divide-slate-100 overflow-y-auto">
+                                <ul class="max-h-[calc(100svh-8.5rem)] divide-y divide-slate-100 overflow-y-auto sm:max-h-96" data-notification-list>
                                     @forelse($navbarNotifications as $notification)
-                                        <li class="{{ is_null($notification->read_at) ? 'bg-indigo-50/60' : '' }}"><a class="block px-4 py-3 hover:bg-slate-50" href="{{ route('notifications.open', $notification) }}"><span class="block text-sm {{ is_null($notification->read_at) ? 'font-semibold text-slate-900' : 'text-slate-600' }}">{{ $notification->data['message'] ?? 'Bildirim' }}</span><span class="mt-1 block text-xs text-slate-400">{{ $notification->created_at->format('d.m.Y H:i') }}</span></a></li>
+                                        <li class="{{ is_null($notification->read_at) ? 'bg-indigo-50/60' : '' }}" data-notification-item data-notification-conversation="{{ $notification->data['conversation_id'] ?? '' }}"><a class="block px-4 py-3 hover:bg-slate-50" href="{{ route('notifications.open', $notification) }}"><span class="block text-sm {{ is_null($notification->read_at) ? 'font-semibold text-slate-900' : 'text-slate-600' }}">{{ $notification->data['message'] ?? 'Bildirim' }}</span><span class="mt-1 block text-xs text-slate-400">{{ $notification->created_at->format('d.m.Y H:i') }}</span></a></li>
                                     @empty
-                                        <li class="px-4 py-10 text-center text-sm text-slate-500">Yeni bildirim bulunmuyor.</li>
+                                        <li class="px-4 py-10 text-center text-sm text-slate-500" data-notification-empty>Yeni bildirim bulunmuyor.</li>
                                     @endforelse
                                 </ul>
                             </div>
@@ -189,5 +193,6 @@
             </main>
         </div>
     </div>
+    <div class="pointer-events-none fixed inset-x-4 bottom-4 z-[70] grid justify-items-end gap-2 sm:left-auto sm:w-96" data-notification-toasts aria-live="polite"></div>
 </body>
 </html>

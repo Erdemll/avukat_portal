@@ -4,31 +4,16 @@ namespace App\Notifications;
 
 use App\Models\ServiceNotice;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
-class ServiceNoticeCreatedNotification extends Notification implements ShouldQueue
+class ServiceNoticeCreatedNotification extends LegalActivityNotification
 {
-    use Queueable;
-
     /**
      * Create a new notification instance.
      */
     public function __construct(private ServiceNotice $notice)
     {
         $this->afterCommit();
-    }
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     /**

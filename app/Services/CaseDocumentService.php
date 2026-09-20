@@ -20,7 +20,10 @@ use Throwable;
 
 class CaseDocumentService
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private CaseFileNotificationService $notifications,
+    ) {}
 
     /**
      * @param  array<int, UploadedFile>  $files
@@ -60,6 +63,12 @@ class CaseDocumentService
                     $documents->push($document->load('currentVersion'));
                 }
 
+                DB::afterCommit(fn () => $this->notifications->documentsUploaded(
+                    $caseFile,
+                    $documents->pluck('title')->all(),
+                    $actor,
+                ));
+
                 return $documents;
             });
         } catch (Throwable $exception) {
@@ -87,6 +96,7 @@ class CaseDocumentService
                 $version = $this->createVersion($document, $fileMetadata, $actor, $nextVersion, $changeNote);
                 $document->forceFill(Arr::except($fileMetadata, ['sha256']))->save();
                 $this->audit->log(AuditAction::DocumentVersionUploaded, $actor, auditable: $version, description: 'Yeni evrak sürümü yüklendi.', newValues: ['document_id' => $document->id, 'version_no' => $nextVersion, 'sha256' => $version->sha256], caseFile: $document->caseFile);
+                DB::afterCommit(fn () => $this->notifications->documentVersionUploaded($version, $actor));
 
                 return $version;
             });

@@ -5,17 +5,22 @@ use App\Models\AuditLog;
 use App\Models\Document;
 use App\Models\DocumentFolder;
 use App\Models\DocumentVersion;
+use App\Notifications\CaseDocumentsUploadedNotification;
+use App\Notifications\CaseDocumentVersionUploadedNotification;
 use App\Services\AuditService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 
 it('uploads private versioned documents to an assigned legal case', function () {
     Storage::fake('legal_private');
+    Notification::fake();
     $manager = userWithRole('manager');
     $lawyer = userWithRole('lawyer');
-    $caseFile = legalCaseFile($manager, [$lawyer]);
+    $otherLawyer = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$lawyer, $otherLawyer]);
     $folder = DocumentFolder::factory()->create(['case_file_id' => $caseFile, 'created_by' => $manager, 'name' => 'Dilekçeler']);
 
     $this->actingAs($lawyer)->post(route('case-files.documents.store', $caseFile), [
@@ -34,15 +39,29 @@ it('uploads private versioned documents to an assigned legal case', function () 
     expect($version->sha256)->toHaveLength(64);
     Storage::disk('legal_private')->assertExists($version->path);
     expect(AuditLog::query()->where('action', AuditAction::DocumentUploaded)->where('case_file_id', $caseFile->id)->exists())->toBeTrue();
+    Notification::assertSentTo(
+        $otherLawyer,
+        CaseDocumentsUploadedNotification::class,
+        function (CaseDocumentsUploadedNotification $notification, array $channels) use ($caseFile, $otherLawyer): bool {
+            $mail = $notification->toMail($otherLawyer);
+
+            return $channels === ['database', 'mail']
+                && $mail->subject === 'Hukuki dosyaya yeni belge eklendi'
+                && $mail->actionUrl === route('case-files.show', $caseFile);
+        },
+    );
+    Notification::assertNotSentTo($lawyer, CaseDocumentsUploadedNotification::class);
     $this->actingAs($lawyer)->get(route('legal-documents.index'))->assertOk()->assertSee('Dava Dilekçesi');
     $this->actingAs($lawyer)->get(route('case-files.show', $caseFile))->assertOk()->assertSee('Dava Dilekçesi');
 });
 
 it('adds immutable ordered versions and serves authorized previews', function () {
     Storage::fake('legal_private');
+    Notification::fake();
     $manager = userWithRole('manager');
     $lawyer = userWithRole('lawyer');
-    $caseFile = legalCaseFile($manager, [$lawyer]);
+    $otherLawyer = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$lawyer, $otherLawyer]);
     $this->actingAs($lawyer)->post(route('case-files.documents.store', $caseFile), [
         'documents' => [UploadedFile::fake()->create('dilekce.pdf', 10, 'application/pdf')],
         'document_type' => 'petition',
@@ -56,6 +75,18 @@ it('adds immutable ordered versions and serves authorized previews', function ()
 
     expect($document->versions()->pluck('version_no')->all())->toBe([1, 2]);
     expect($document->fresh()->currentVersion->version_no)->toBe(2);
+    Notification::assertSentTo(
+        $otherLawyer,
+        CaseDocumentVersionUploadedNotification::class,
+        function (CaseDocumentVersionUploadedNotification $notification, array $channels) use ($caseFile, $otherLawyer): bool {
+            $mail = $notification->toMail($otherLawyer);
+
+            return $channels === ['database', 'mail']
+                && $mail->subject === 'Hukuki dosya belgesine yeni sürüm eklendi'
+                && $mail->actionUrl === route('case-files.show', $caseFile);
+        },
+    );
+    Notification::assertNotSentTo($lawyer, CaseDocumentVersionUploadedNotification::class);
     $version = $document->versions()->firstOrFail();
     expect(fn () => $version->update(['change_note' => 'değiştirildi']))->toThrow(LogicException::class);
     $this->actingAs($lawyer)->get(route('document-versions.preview', $document->fresh()->currentVersion))
