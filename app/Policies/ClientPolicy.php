@@ -44,7 +44,10 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client): bool
     {
-        return false;
+        return $user->isManager() || ($user->isLawyer() && (
+            $client->created_by === $user->id
+            || $client->party->caseFiles()->visibleTo($user)->exists()
+        ));
     }
 
     /**

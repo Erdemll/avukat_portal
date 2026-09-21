@@ -72,7 +72,7 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/case-files/{caseFile}/parties/{caseFileParty}', [CaseFilePartyController::class, 'destroy'])->name('case-files.parties.destroy');
     Route::post('/case-files/{caseFile}/documents', [CaseFileDocumentController::class, 'store'])->name('case-files.documents.store');
     Route::post('/case-files/{caseFile}/document-folders', [DocumentFolderController::class, 'store'])->name('case-files.document-folders.store');
-    Route::resource('clients', ClientController::class)->except(['destroy']);
+    Route::resource('clients', ClientController::class);
     Route::get('/documents', LegalDocumentController::class)->name('legal-documents.index');
     Route::get('/documents/{document}/udf', [UdfDocumentController::class, 'show'])->name('documents.udf.show');
     Route::get('/documents/{document}/udf/edit', [UdfDocumentController::class, 'edit'])->name('documents.udf.edit');

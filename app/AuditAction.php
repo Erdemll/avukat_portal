@@ -67,6 +67,7 @@ enum AuditAction: string
     case CaseFilePartyRemoved = 'CASE_FILE_PARTY_REMOVED';
     case ClientCreated = 'CLIENT_CREATED';
     case ClientUpdated = 'CLIENT_UPDATED';
+    case ClientDeleted = 'CLIENT_DELETED';
     case PasswordResetRequested = 'PASSWORD_RESET_REQUESTED';
     case PasswordResetCompleted = 'PASSWORD_RESET_COMPLETED';
     case TwoFactorEnabled = 'TWO_FACTOR_ENABLED';

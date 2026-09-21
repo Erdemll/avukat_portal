@@ -145,7 +145,7 @@ class EventController extends Controller
             $event->delete();
         });
 
-        return redirect()->route('events.index');
+        return redirect()->route('events.index')->with('success', 'Olay silindi.');
     }
 
     public function updateStatus(UpdateEventStatusRequest $request, Event $event, EventManagementService $management): RedirectResponse

@@ -1,7 +1,10 @@
 <?php
 
+use App\AuditAction;
+use App\Models\AuditLog;
 use App\Models\CaseFileParty;
 use App\Models\Client;
+use App\Models\ClientCommunication;
 use App\Models\Party;
 use App\Models\PartyIdentifier;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +34,59 @@ it('renders client creation and edit forms', function () {
 
     $this->actingAs($manager)->get(route('clients.create'))->assertOk()->assertSee('Yeni Müvekkil Oluştur');
     $this->actingAs($manager)->get(route('clients.edit', $client))->assertOk()->assertSee('Müvekkili Düzenle');
+});
+
+it('lets managers delete unlinked clients and records the deletion', function () {
+    $manager = userWithRole('manager');
+    $lawyer = userWithRole('lawyer');
+    $client = Client::factory()->create(['created_by' => $manager]);
+    $partyId = $client->party_id;
+
+    $this->actingAs($manager)->get(route('clients.index'))->assertSee('Müvekkili Sil');
+    $this->actingAs($manager)->get(route('clients.show', $client))->assertSee('Silmeyi Onayla');
+    $this->actingAs($lawyer)->delete(route('clients.destroy', $client))->assertForbidden();
+    $this->actingAs($manager)->delete(route('clients.destroy', $client))
+        ->assertRedirect(route('clients.index'));
+
+    $this->assertDatabaseMissing('clients', ['id' => $client->id]);
+    $this->assertSoftDeleted('parties', ['id' => $partyId]);
+    expect(AuditLog::query()->where('action', AuditAction::ClientDeleted)->exists())->toBeTrue();
+});
+
+it('lets the responsible lawyer delete a client after its relationship ends while preserving the case party', function () {
+    $manager = userWithRole('manager');
+    $lawyer = userWithRole('lawyer');
+    $otherLawyer = userWithRole('lawyer');
+    $client = Client::factory()->create(['created_by' => $manager]);
+    $caseFile = legalCaseFile($manager, [$lawyer]);
+    $caseFileParty = CaseFileParty::factory()->create([
+        'case_file_id' => $caseFile,
+        'party_id' => $client->party_id,
+        'added_by' => $manager,
+    ]);
+    $partyId = $client->party_id;
+
+    $this->actingAs($otherLawyer)->delete(route('clients.destroy', $client))->assertForbidden();
+    $this->actingAs($lawyer)->delete(route('clients.destroy', $client))->assertSessionHasErrors('client');
+    $caseFileParty->forceFill(['left_at' => now()])->save();
+    $this->actingAs($lawyer)->delete(route('clients.destroy', $client))
+        ->assertRedirect(route('clients.index'));
+
+    $this->assertDatabaseMissing('clients', ['id' => $client->id]);
+    $this->assertDatabaseHas('parties', ['id' => $partyId, 'deleted_at' => null]);
+    $this->assertModelExists($caseFileParty);
+});
+
+it('does not delete clients with communication history', function () {
+    $manager = userWithRole('manager');
+    $client = Client::factory()->create(['created_by' => $manager]);
+    ClientCommunication::factory()->create(['client_id' => $client, 'user_id' => $manager]);
+
+    $this->actingAs($manager)->delete(route('clients.destroy', $client))
+        ->assertSessionHasErrors('client');
+
+    $this->assertModelExists($client);
+    expect($client->party()->withTrashed()->firstOrFail()->trashed())->toBeFalse();
 });
 
 it('does not let lawyers submit sensitive client identifiers', function () {

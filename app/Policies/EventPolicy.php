@@ -56,7 +56,7 @@ class EventPolicy
      */
     public function delete(User $user, Event $event): bool
     {
-        return $user->isManager();
+        return $user->isManager() || ($user->isLawyer() && $event->assigned_lawyer_id === $user->id);
     }
 
     /**

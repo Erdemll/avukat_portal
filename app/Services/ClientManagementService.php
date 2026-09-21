@@ -87,6 +87,40 @@ class ClientManagementService
         });
     }
 
+    public function delete(Client $client, User $actor): void
+    {
+        DB::transaction(function () use ($client, $actor): void {
+            $client = Client::query()->with('party')->lockForUpdate()->findOrFail($client->id);
+            Gate::forUser($actor)->authorize('delete', $client);
+
+            if ($client->communications()->exists() || $client->party->activeCaseFiles()->exists()) {
+                throw ValidationException::withMessages([
+                    'client' => 'Aktif hukuki dosya ilişkisi veya iletişim kaydı bulunan müvekkil silinemez.',
+                ]);
+            }
+
+            $party = $client->party;
+            $hasCaseFiles = $party->caseFiles()->exists();
+            $this->audit->log(
+                AuditAction::ClientDeleted,
+                $actor,
+                auditable: $client,
+                description: 'Müvekkil silindi.',
+                oldValues: [
+                    'client_id' => $client->id,
+                    'party_id' => $party->id,
+                    'display_name' => $party->display_name,
+                    'status' => $client->status,
+                ],
+            );
+            $client->delete();
+
+            if (! $hasCaseFiles) {
+                $party->delete();
+            }
+        });
+    }
+
     /** @param array<string, mixed> $data */
     private function storeIdentifier(Party $party, array $data, User $actor): void
     {

@@ -6,7 +6,26 @@
     <form class="mt-6 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto_auto]" method="GET" action="{{ route('clients.index') }}"><input name="search" value="{{ request('search') }}" placeholder="Ad, soyad veya şirket ara" class="w-full min-w-0 rounded-lg border-slate-300"><select name="status" class="w-full rounded-lg border-slate-300"><option value="">Tüm durumlar</option><option value="active" @selected(request('status') === 'active')>Aktif</option><option value="inactive" @selected(request('status') === 'inactive')>Pasif</option></select><button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Filtrele</button></form>
     <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @forelse($clients as $client)
-            <a class="group min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md" href="{{ route('clients.show', $client) }}"><div class="flex items-start justify-between gap-3"><div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 font-bold text-indigo-700">{{ Str::upper(Str::substr($client->party->display_name, 0, 1)) }}</div><span class="rounded-full px-2 py-1 text-xs font-medium {{ $client->status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600' }}">{{ $client->status === 'active' ? 'Aktif' : 'Pasif' }}</span></div><h2 class="mt-4 break-words font-semibold text-slate-900 group-hover:text-indigo-700">{{ $client->party->display_name }}</h2><p class="mt-1 text-sm text-slate-500">{{ $client->party->type->label() }}</p><p class="mt-4 break-words text-xs text-slate-500">{{ $client->party->phone ?: 'Telefon yok' }} · {{ $client->party->email ?: 'E-posta yok' }}</p></a>
+            <article class="group relative min-w-0 rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
+                <a class="block p-5" href="{{ route('clients.show', $client) }}">
+                    <div class="flex items-start justify-between gap-3"><div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 font-bold text-indigo-700">{{ Str::upper(Str::substr($client->party->display_name, 0, 1)) }}</div><span class="rounded-full px-2 py-1 text-xs font-medium {{ $client->status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600' }}">{{ $client->status === 'active' ? 'Aktif' : 'Pasif' }}</span></div><h2 class="mt-4 break-words font-semibold text-slate-900 group-hover:text-indigo-700">{{ $client->party->display_name }}</h2><p class="mt-1 text-sm text-slate-500">{{ $client->party->type->label() }}</p><p class="mt-4 break-words text-xs text-slate-500">{{ $client->party->phone ?: 'Telefon yok' }} · {{ $client->party->email ?: 'E-posta yok' }}</p>
+                </a>
+                @can('delete', $client)
+                    <div class="border-t border-slate-100 px-5 py-3">
+                        <details class="relative">
+                            <summary class="w-fit cursor-pointer list-none text-xs font-semibold text-red-700 hover:text-red-900">Müvekkili Sil</summary>
+                            <div class="absolute bottom-7 left-0 z-20 w-72 rounded-xl border border-red-200 bg-white p-4 shadow-xl">
+                                <p class="text-sm text-slate-700">Aktif dosya ilişkisi ve iletişim geçmişi kontrol edilecektir.</p>
+                                <form class="mt-3" method="POST" action="{{ route('clients.destroy', $client) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="w-full rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800">Silmeyi Onayla</button>
+                                </form>
+                            </div>
+                        </details>
+                    </div>
+                @endcan
+            </article>
         @empty
             <div class="rounded-xl border border-dashed border-slate-300 p-12 text-center text-sm text-slate-500 sm:col-span-2 xl:col-span-3">Müvekkil kaydı bulunamadı.</div>
         @endforelse

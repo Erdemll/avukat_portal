@@ -52,13 +52,16 @@ it('accepts only active lawyers as event assignees', function () {
     $this->actingAs($employee)->post('/events', eventPayload($notLawyer))->assertSessionHasErrors('assigned_lawyer_id');
 });
 
-it('prevents employees and lawyers from deleting and lets managers soft delete', function () {
+it('lets managers and assigned lawyers delete events', function () {
     $employee = userWithRole('employee');
     $lawyer = userWithRole('lawyer');
+    $otherLawyer = userWithRole('lawyer');
+    $manager = userWithRole('manager');
     $event = legalEvent($employee, $lawyer);
+    $this->actingAs($manager)->get(route('events.show', $event))->assertSee('Olayı Sil');
     $this->actingAs($employee)->delete(route('events.destroy', $event))->assertForbidden();
-    $this->actingAs($lawyer)->delete(route('events.destroy', $event))->assertForbidden();
-    $this->actingAs(userWithRole('manager'))->delete(route('events.destroy', $event))->assertRedirect();
+    $this->actingAs($otherLawyer)->delete(route('events.destroy', $event))->assertForbidden();
+    $this->actingAs($lawyer)->delete(route('events.destroy', $event))->assertRedirect();
     $this->assertSoftDeleted('events', ['id' => $event->id]);
 });
 

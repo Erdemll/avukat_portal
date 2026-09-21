@@ -97,8 +97,10 @@ class ClientController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Client $client): never
+    public function destroy(Request $request, Client $client, ClientManagementService $clients): RedirectResponse
     {
-        abort(405);
+        $clients->delete($client, $request->user());
+
+        return redirect()->route('clients.index')->with('success', 'Müvekkil silindi.');
     }
 }

@@ -60,14 +60,33 @@ it('rejects disallowed extensions and files over fifty megabytes', function () {
     $this->actingAs($employee)->post(route('events.documents.store', $event), ['documents' => [UploadedFile::fake()->create('buyuk.pdf', 51201, 'application/pdf')]])->assertSessionHasErrors('documents.0');
 });
 
-it('only lets managers soft delete documents without deleting the private file', function () {
+it('lets managers and assigned lawyers soft delete documents without deleting the private file', function () {
     Storage::fake('legal_private');
     $employee = userWithRole('employee');
-    $event = legalEvent($employee, userWithRole('lawyer'));
+    $lawyer = userWithRole('lawyer');
+    $event = legalEvent($employee, $lawyer);
     $this->actingAs($employee)->post(route('events.documents.store', $event), ['documents' => [documentFile()]]);
     $document = Document::query()->firstOrFail();
     $this->actingAs($employee)->delete(route('documents.destroy', $document))->assertForbidden();
-    $this->actingAs(userWithRole('manager'))->delete(route('documents.destroy', $document))->assertRedirect();
+    $this->actingAs(userWithRole('lawyer'))->delete(route('documents.destroy', $document))->assertForbidden();
+    $this->actingAs($lawyer)->delete(route('documents.destroy', $document))->assertRedirect();
     $this->assertSoftDeleted('documents', ['id' => $document->id]);
     Storage::disk('legal_private')->assertExists($document->path);
+});
+
+it('lets an assigned case lawyer delete a case file document', function () {
+    $manager = userWithRole('manager');
+    $lawyer = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$lawyer]);
+    $document = Document::factory()->create([
+        'event_id' => null,
+        'case_file_id' => $caseFile,
+        'uploaded_by' => $manager,
+    ]);
+
+    $this->actingAs(userWithRole('lawyer'))->delete(route('documents.destroy', $document))->assertForbidden();
+    $this->actingAs($lawyer)->delete(route('documents.destroy', $document))
+        ->assertRedirect(route('case-files.show', $caseFile));
+
+    $this->assertSoftDeleted('documents', ['id' => $document->id]);
 });

@@ -60,7 +60,7 @@ class DocumentPolicy
      */
     public function delete(User $user, Document $document): bool
     {
-        return $user->isManager() && $this->view($user, $document);
+        return ($user->isManager() || $user->isLawyer()) && $this->view($user, $document);
     }
 
     /**
