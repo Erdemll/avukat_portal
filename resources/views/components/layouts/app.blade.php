@@ -57,7 +57,7 @@
     <meta name="theme-color" content="#293e47">
     <meta property="csp-nonce" nonce="{{ Vite::cspNonce() }}">
     <title>{{ $title ? $title.' · ' : '' }}{{ config('app.name') }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/notifications.js'])
 </head>
 <body class="min-h-full antialiased" data-auth-user-id="{{ $user->id }}" data-messages-url="{{ route('messages.index') }}">
     <div class="min-h-svh lg:grid lg:grid-cols-[17.5rem_minmax(0,1fr)]">

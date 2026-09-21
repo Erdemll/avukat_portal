@@ -1,3 +1,5 @@
+import './echo';
+
 const root = document.querySelector('[data-messages-root]');
 
 if (root) {

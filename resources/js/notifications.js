@@ -1,3 +1,5 @@
+import './echo';
+
 const userId = Number(document.body.dataset.authUserId || 0);
 const notificationCenter = document.querySelector('[data-notification-center]');
 
