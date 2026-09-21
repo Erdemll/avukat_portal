@@ -68,6 +68,7 @@ class MessageController extends Controller
             'lawyers' => $lawyerData,
             'currentUserId' => $request->user()->id,
             'initialConversationId' => $conversations->firstWhere('id', $request->integer('conversation'))?->id,
+            'initialLawyerId' => $lawyers->firstWhere('id', $request->integer('lawyer'))?->id,
         ]);
     }
 

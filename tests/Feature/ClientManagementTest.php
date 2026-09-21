@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\CaseFileParty;
 use App\Models\Client;
+use App\Models\Party;
 use App\Models\PartyIdentifier;
 use Illuminate\Support\Facades\DB;
 
@@ -126,6 +128,80 @@ it('scopes clients to their creator or assigned legal cases', function () {
     $this->actingAs($lawyer)->get(route('clients.show', $client))->assertSee('Mehmet Kaya');
     $this->actingAs($otherLawyer)->get(route('clients.show', $client))->assertForbidden();
     $this->actingAs($manager)->get(route('clients.show', $client))->assertSee('Mehmet Kaya');
+});
+
+it('lets only the lead lawyer edit a client linked to a legal case', function () {
+    $manager = userWithRole('manager');
+    $leadLawyer = userWithRole('lawyer');
+    $assignedLawyer = userWithRole('lawyer');
+    $creator = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$leadLawyer, $assignedLawyer]);
+    $party = Party::factory()->create(['created_by' => $creator, 'name' => 'Eski']);
+    $client = Client::factory()->create(['party_id' => $party, 'created_by' => $creator]);
+    CaseFileParty::factory()->create(['case_file_id' => $caseFile, 'party_id' => $party, 'added_by' => $manager]);
+    $client->refresh();
+
+    expect($manager->can('update', $client))->toBeTrue()
+        ->and($leadLawyer->can('update', $client))->toBeTrue()
+        ->and($leadLawyer->can('update', $party))->toBeTrue()
+        ->and($assignedLawyer->can('view', $client))->toBeTrue()
+        ->and($assignedLawyer->can('update', $client))->toBeFalse()
+        ->and($assignedLawyer->can('update', $party))->toBeFalse()
+        ->and($creator->can('update', $client))->toBeFalse();
+
+    $this->actingAs($assignedLawyer)->get(route('clients.edit', $client))->assertForbidden();
+    $this->actingAs($assignedLawyer)->put(route('clients.update', $client), [
+        'type' => 'individual',
+        'name' => 'Yetkisiz',
+        'surname' => $party->surname,
+        'status' => 'active',
+        'lock_version' => $client->lock_version,
+    ])->assertForbidden();
+    expect($party->fresh()->name)->toBe('Eski');
+
+    $this->actingAs($leadLawyer)->put(route('clients.update', $client), [
+        'type' => 'individual',
+        'name' => 'Güncel',
+        'surname' => $party->surname,
+        'status' => 'active',
+        'lock_version' => $client->lock_version,
+    ])->assertRedirect(route('clients.show', $client));
+    expect($party->fresh()->name)->toBe('Güncel');
+
+    $caseFile->assignments()->where('lawyer_id', $leadLawyer->id)->firstOrFail()
+        ->forceFill(['ended_at' => now()])->save();
+    expect($leadLawyer->can('update', $client))->toBeFalse();
+});
+
+it('requires the same lead lawyer on every legal case sharing a client', function () {
+    $manager = userWithRole('manager');
+    $firstLead = userWithRole('lawyer');
+    $secondLead = userWithRole('lawyer');
+    $client = Client::factory()->create(['created_by' => $manager]);
+    $firstCase = legalCaseFile($manager, [$firstLead]);
+    $secondCase = legalCaseFile($manager, [$firstLead]);
+    $thirdCase = legalCaseFile($manager, [$secondLead]);
+    CaseFileParty::factory()->create(['case_file_id' => $firstCase, 'party_id' => $client->party_id, 'added_by' => $manager]);
+
+    expect($firstLead->can('update', $client))->toBeTrue();
+
+    CaseFileParty::factory()->create(['case_file_id' => $secondCase, 'party_id' => $client->party_id, 'added_by' => $manager]);
+
+    expect($firstLead->can('update', $client))->toBeTrue();
+
+    CaseFileParty::factory()->create(['case_file_id' => $thirdCase, 'party_id' => $client->party_id, 'added_by' => $manager]);
+
+    expect($firstLead->can('update', $client))->toBeFalse()
+        ->and($secondLead->can('update', $client))->toBeFalse()
+        ->and($manager->can('update', $client))->toBeTrue();
+});
+
+it('keeps an unlinked client editable by its creator', function () {
+    $creator = userWithRole('lawyer');
+    $party = Party::factory()->create(['created_by' => $creator]);
+    $client = Client::factory()->create(['party_id' => $party, 'created_by' => $creator]);
+
+    expect($creator->can('update', $client))->toBeTrue();
 });
 
 it('does not render sensitive identifiers to lawyers', function () {

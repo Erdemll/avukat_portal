@@ -38,6 +38,15 @@ it('shows active lawyers but excludes the current and inactive lawyers', functio
         ->assertDontSee('data-lawyer-id="'.$employee->id.'"', false)->assertSee('Mesajlar');
 });
 
+it('renders lawyer rows as links and selects a lawyer from the query string', function () {
+    $lawyer = userWithRole('lawyer');
+    $targetLawyer = userWithRole('lawyer');
+
+    $this->actingAs($lawyer)->get(route('messages.index', ['lawyer' => $targetLawyer->id]))
+        ->assertSee('href="'.route('messages.index', ['lawyer' => $targetLawyer->id]).'"', false)
+        ->assertSee('"initial_lawyer_id":'.$targetLawyer->id, false);
+});
+
 it('creates one direct conversation for the same two lawyers', function () {
     $firstLawyer = userWithRole('lawyer');
     $secondLawyer = userWithRole('lawyer');

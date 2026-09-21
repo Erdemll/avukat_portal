@@ -58,5 +58,5 @@
         </div>
     </section>
 
-    <script id="udf-document-content" type="application/json">{!! json_encode($data['content'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+    <script nonce="{{ Vite::cspNonce() }}" id="udf-document-content" type="application/json">{!! json_encode($data['content'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
 </x-layouts.app>

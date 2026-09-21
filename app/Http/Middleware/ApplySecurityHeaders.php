@@ -16,35 +16,42 @@ class ApplySecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        Vite::useCspNonce();
+
         $response = $next($request);
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         if (! $response->headers->has('Content-Security-Policy')) {
-            $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy());
+            $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($request));
         }
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-        if ($request->user() !== null) {
+        if ($request->user() !== null || str_contains((string) $response->headers->get('Content-Type'), 'text/html')) {
             $response->headers->set('Cache-Control', 'private, no-store');
         }
 
         return $response;
     }
 
-    private function contentSecurityPolicy(): string
+    private function contentSecurityPolicy(Request $request): string
     {
+        $nonce = "'nonce-".Vite::cspNonce()."'";
+
         $directives = [
-            'default-src' => ["'self'"],
-            'script-src' => ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            'style-src' => ["'self'", "'unsafe-inline'"],
+            'default-src' => ["'none'"],
+            'script-src' => [$nonce, "'strict-dynamic'", "'self'"],
+            'script-src-attr' => ["'none'"],
+            'style-src' => ["'self'", $nonce],
+            'style-src-attr' => [$request->routeIs('documents.udf.show', 'documents.udf.edit') ? "'unsafe-inline'" : "'none'"],
             'img-src' => ["'self'", 'data:'],
             'font-src' => ["'self'", 'data:'],
             'connect-src' => ["'self'"],
             'media-src' => ["'self'"],
+            'frame-src' => ["'none'"],
             'object-src' => ["'none'"],
             'frame-ancestors' => ["'none'"],
-            'base-uri' => ["'self'"],
+            'base-uri' => ["'none'"],
             'form-action' => ["'self'"],
         ];
 

@@ -34,9 +34,9 @@
                             ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
                             ->implode('');
                     @endphp
-                    <button
-                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-slate-50 focus-visible:bg-slate-50"
-                        type="button"
+                    <a
+                        class="group flex w-full touch-manipulation items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-slate-50 focus-visible:bg-slate-50"
+                        href="{{ route('messages.index', $lawyer['conversation_id'] ? ['conversation' => $lawyer['conversation_id']] : ['lawyer' => $lawyer['id']]) }}"
                         data-lawyer-row
                         data-lawyer-id="{{ $lawyer['id'] }}"
                         data-lawyer-name="{{ $lawyer['name'] }}"
@@ -52,7 +52,7 @@
                             <time class="text-[0.68rem] text-slate-400" data-lawyer-time datetime="{{ $lawyer['last_message_at'] }}"></time>
                             <span class="{{ $lawyer['unread_count'] > 0 ? 'inline-flex' : 'hidden' }} min-w-5 items-center justify-center rounded-full bg-indigo-800 px-1.5 py-0.5 text-[0.68rem] font-bold text-white" data-unread-count aria-label="{{ $lawyer['unread_count'] }} okunmamış mesaj">{{ $lawyer['unread_count'] }}</span>
                         </span>
-                    </button>
+                    </a>
                 @empty
                     <div class="px-5 py-12 text-center">
                         <p class="font-serif text-lg font-semibold text-slate-800">Aktif avukat bulunmuyor</p>
@@ -120,5 +120,5 @@
         </div>
     </section>
 
-    <script type="application/json" data-messages-config>@json(['lawyers' => $lawyers, 'initial_conversation_id' => $initialConversationId])</script>
+    <script nonce="{{ Vite::cspNonce() }}" type="application/json" data-messages-config>@json(['lawyers' => $lawyers, 'initial_conversation_id' => $initialConversationId, 'initial_lawyer_id' => $initialLawyerId])</script>
 </x-layouts.app>

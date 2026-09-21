@@ -5,8 +5,8 @@
     description="Rolünüze uygun giriş yöntemini seçerek güvenli oturumunuzu başlatın."
 >
     <div class="grid grid-cols-2 rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Giriş yöntemi">
-        <button class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-indigo-800 shadow-sm" id="tab-email" type="button" role="tab" aria-selected="true" onclick="switchTab('email')">Yönetici / Çalışan</button>
-        <button class="rounded-md px-3 py-2.5 text-sm font-medium text-slate-500" id="tab-lawyer" type="button" role="tab" aria-selected="false" onclick="switchTab('lawyer')">Avukat</button>
+        <button class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-indigo-800 shadow-sm" id="tab-email" type="button" role="tab" aria-selected="true">Yönetici / Çalışan</button>
+        <button class="rounded-md px-3 py-2.5 text-sm font-medium text-slate-500" id="tab-lawyer" type="button" role="tab" aria-selected="false">Avukat</button>
     </div>
 
     <form class="mt-6 grid gap-5" method="POST" action="{{ route('login.store') }}">
@@ -45,7 +45,7 @@
         </button>
     </form>
 
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         function switchTab(tab) {
             const isEmail = tab === 'email';
             const emailTab = document.getElementById('tab-email');
@@ -70,6 +70,9 @@
             document.getElementById('login_type').value = tab;
             (isEmail ? emailInput : sicilInput).focus();
         }
+
+        document.getElementById('tab-email').addEventListener('click', () => switchTab('email'));
+        document.getElementById('tab-lawyer').addEventListener('click', () => switchTab('lawyer'));
 
         @if(old('sicil_no'))
             document.addEventListener('DOMContentLoaded', () => switchTab('lawyer'));

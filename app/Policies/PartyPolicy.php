@@ -2,8 +2,10 @@
 
 namespace App\Policies;
 
+use App\CaseAssignmentRole;
 use App\Models\Party;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 class PartyPolicy
 {
@@ -36,7 +38,24 @@ class PartyPolicy
      */
     public function update(User $user, Party $party): bool
     {
-        return $user->isManager() || ($user->isLawyer() && ($party->created_by === $user->id || $party->activeCaseFiles()->visibleTo($user)->exists()));
+        if ($user->isManager()) {
+            return true;
+        }
+
+        if (! $user->isLawyer()) {
+            return false;
+        }
+
+        if (! $party->activeCaseFiles()->exists()) {
+            return $party->created_by === $user->id;
+        }
+
+        return ! $party->activeCaseFiles()
+            ->whereDoesntHave('assignments', fn (Builder $assignments): Builder => $assignments
+                ->where('lawyer_id', $user->id)
+                ->where('role', CaseAssignmentRole::Lead->value)
+                ->whereNull('ended_at'))
+            ->exists();
     }
 
     /**

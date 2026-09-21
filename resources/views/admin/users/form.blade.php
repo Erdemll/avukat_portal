@@ -117,7 +117,7 @@
         $selectedRoleId = old('role_id', $user->role_id);
     @endphp
 
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         document.addEventListener('DOMContentLoaded', function () {
             const tcField = document.getElementById('tc_kimlik_no_field');
             const tcInput = document.getElementById('tc_kimlik_no');

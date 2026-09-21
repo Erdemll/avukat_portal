@@ -36,7 +36,7 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
-        return $this->view($user, $client);
+        return $this->view($user, $client) && $user->can('update', $client->party);
     }
 
     /**

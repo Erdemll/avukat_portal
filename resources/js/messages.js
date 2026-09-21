@@ -292,7 +292,10 @@ if (root) {
         element.textContent = formatTime(element.dateTime);
     });
 
-    root.querySelectorAll('[data-lawyer-row]').forEach(row => row.addEventListener('click', () => openConversation(row)));
+    root.querySelectorAll('[data-lawyer-row]').forEach(row => row.addEventListener('click', event => {
+        event.preventDefault();
+        openConversation(row);
+    }));
 
     root.querySelector('[data-lawyer-search]').addEventListener('input', event => {
         const needle = event.target.value.trim().toLocaleLowerCase('tr-TR');
@@ -383,6 +386,9 @@ if (root) {
 
     if (config.initial_conversation_id) {
         const initialRow = root.querySelector(`[data-lawyer-row][data-conversation-id="${config.initial_conversation_id}"]`);
+        initialRow?.click();
+    } else if (config.initial_lawyer_id) {
+        const initialRow = root.querySelector(`[data-lawyer-row][data-lawyer-id="${config.initial_lawyer_id}"]`);
         initialRow?.click();
     }
 }
