@@ -121,4 +121,5 @@
     </section>
 
     <script nonce="{{ Vite::cspNonce() }}" type="application/json" data-messages-config>@json(['lawyers' => $lawyers, 'initial_conversation_id' => $initialConversationId, 'initial_lawyer_id' => $initialLawyerId])</script>
+    @vite('resources/js/messages.js')
 </x-layouts.app>

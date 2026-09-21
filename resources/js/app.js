@@ -284,4 +284,3 @@ document.querySelectorAll('[data-udf-editor]').forEach(initializeUdfEditor);
 
 import './echo';
 import './notifications';
-import './messages';
