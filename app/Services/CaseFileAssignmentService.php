@@ -47,7 +47,7 @@ class CaseFileAssignmentService
             $oldLeadLawyerId = $activeAssignments->first(fn (CaseFileAssignment $assignment): bool => $assignment->role === CaseAssignmentRole::Lead)?->lawyer_id;
 
             foreach ($activeAssignments as $assignment) {
-                if ($assignment->role === CaseAssignmentRole::Lead) {
+                if ($assignment->role === CaseAssignmentRole::Lead && $lawyerIds->contains((int) $assignment->lawyer_id)) {
                     $assignment->forceFill(['role' => CaseAssignmentRole::Lawyer])->save();
                 }
             }

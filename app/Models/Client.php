@@ -31,6 +31,11 @@ class Client extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function responsibleLawyer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsible_lawyer_id');
+    }
+
     public function communications(): HasMany
     {
         return $this->hasMany(ClientCommunication::class);
@@ -41,8 +46,12 @@ class Client extends Model
         return match (true) {
             $user->isManager() => $query,
             $user->isLawyer() => $query->where(function (Builder $query) use ($user): void {
-                $query->where('created_by', $user->id)
-                    ->orWhereHas('party.activeCaseFiles', fn (Builder $caseFiles) => $caseFiles->visibleTo($user));
+                $query->where(fn (Builder $created) => $created->where('created_by', $user->id)
+                    ->where(fn (Builder $responsibility) => $responsibility->whereNull('responsible_lawyer_id')
+                        ->orWhere('responsible_lawyer_id', $user->id)))
+                    ->orWhereHas('party.activeCaseFiles', fn (Builder $caseFiles) => $caseFiles->visibleTo($user))
+                    ->orWhere(fn (Builder $unlinked) => $unlinked->where('responsible_lawyer_id', $user->id)
+                        ->whereDoesntHave('party.activeCaseFiles'));
             }),
             default => $query->whereRaw('1 = 0'),
         };

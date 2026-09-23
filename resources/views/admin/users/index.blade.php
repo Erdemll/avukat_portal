@@ -30,7 +30,7 @@
                 @forelse($users as $user)
                     <tr class="transition hover:bg-slate-50">
                         <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{{ $user->name }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $user->email }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $user->email ?: '-' }}</td>
                         <td class="whitespace-nowrap px-4 py-3 font-mono text-sm text-slate-600">{{ $user->tc_kimlik_no ?: '-' }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $user->phone ?: '-' }}</td>
                         <td class="whitespace-nowrap px-4 py-3">

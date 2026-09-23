@@ -36,6 +36,7 @@ class ClientManagementService
             ]);
             $client->party_id = $party->id;
             $client->created_by = $actor->id;
+            $client->responsible_lawyer_id = $actor->isLawyer() ? $actor->id : null;
             $client->save();
 
             $this->storeIdentifier($party, $data, $actor);

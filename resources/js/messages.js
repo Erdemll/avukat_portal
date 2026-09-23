@@ -236,6 +236,8 @@ if (root) {
         root.querySelector('[data-chat-name]').textContent = `Av. ${payload.conversation.participant.name}`;
         root.querySelector('[data-chat-initials]').textContent = initials(payload.conversation.participant.name);
         root.querySelector('[data-chat-status]').textContent = payload.conversation.participant.is_active ? 'Özel görüşme' : 'Pasif kullanıcı · geçmiş erişilebilir';
+        form.classList.toggle('hidden', !payload.conversation.participant.is_active);
+        input.disabled = !payload.conversation.participant.is_active;
         messageList.replaceChildren();
         seenMessageIds.clear();
         payload.messages.forEach(message => appendMessage(message));
@@ -386,6 +388,7 @@ if (root) {
 
     if (config.initial_conversation_id) {
         const initialRow = root.querySelector(`[data-lawyer-row][data-conversation-id="${config.initial_conversation_id}"]`);
+        initialRow?.closest('details')?.setAttribute('open', '');
         initialRow?.click();
     } else if (config.initial_lawyer_id) {
         const initialRow = root.querySelector(`[data-lawyer-row][data-lawyer-id="${config.initial_lawyer_id}"]`);

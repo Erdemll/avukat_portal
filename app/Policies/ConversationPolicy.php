@@ -42,7 +42,8 @@ class ConversationPolicy
 
     public function sendMessage(User $user, Conversation $conversation): bool
     {
-        return $this->view($user, $conversation);
+        return $this->view($user, $conversation)
+            && $conversation->participants()->whereKeyNot($user->id)->where('is_active', true)->exists();
     }
 
     public function markRead(User $user, Conversation $conversation): bool

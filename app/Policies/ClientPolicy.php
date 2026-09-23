@@ -20,7 +20,10 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        return $user->isManager() || ($user->isLawyer() && ($client->created_by === $user->id || $user->can('view', $client->party)));
+        return $user->isManager() || ($user->isLawyer() && (
+            ($client->created_by === $user->id && ($client->responsible_lawyer_id === null || $client->responsible_lawyer_id === $user->id))
+            || $user->can('view', $client->party)
+        ));
     }
 
     /**
@@ -45,7 +48,8 @@ class ClientPolicy
     public function delete(User $user, Client $client): bool
     {
         return $user->isManager() || ($user->isLawyer() && (
-            $client->created_by === $user->id
+            ($client->created_by === $user->id && ($client->responsible_lawyer_id === null || $client->responsible_lawyer_id === $user->id))
+            || ($client->responsible_lawyer_id === $user->id && ! $client->party->activeCaseFiles()->exists())
             || $client->party->caseFiles()->visibleTo($user)->exists()
         ));
     }

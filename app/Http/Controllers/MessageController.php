@@ -64,8 +64,24 @@ class MessageController extends Controller
             ];
         });
 
+        $archivedLawyers = $conversations->map(function (Conversation $conversation) use ($request): ?array {
+            $lawyer = $conversation->participants->firstWhere('id', '!=', $request->user()->id);
+            if ($lawyer === null || $lawyer->is_active) {
+                return null;
+            }
+
+            return [
+                'id' => $lawyer->id,
+                'name' => $lawyer->name,
+                'conversation_id' => $conversation->id,
+                'last_message' => $conversation->latestMessage?->body,
+                'last_message_at' => $conversation->latestMessage?->created_at?->toIso8601String(),
+            ];
+        })->filter()->values();
+
         return view('messages.index', [
             'lawyers' => $lawyerData,
+            'archivedLawyers' => $archivedLawyers,
             'currentUserId' => $request->user()->id,
             'initialConversationId' => $conversations->firstWhere('id', $request->integer('conversation'))?->id,
             'initialLawyerId' => $lawyers->firstWhere('id', $request->integer('lawyer'))?->id,

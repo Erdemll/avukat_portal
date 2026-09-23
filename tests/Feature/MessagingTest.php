@@ -316,4 +316,20 @@ it('preserves historical conversations when the other lawyer is deactivated', fu
 
     $this->actingAs($firstLawyer)->getJson(route('messages.conversations.show', $conversation))->assertOk()
         ->assertJsonPath('conversation.participant.is_active', false)->assertJsonPath('messages.0.body', 'Arşiv mesajı');
+    $this->actingAs($firstLawyer)->get(route('messages.index', ['conversation' => $conversation->id]))
+        ->assertSee('Geçmiş görüşmeler')->assertSee('Arşiv mesajı');
+});
+
+it('returns 403 and keeps the history unchanged when messaging an inactive conversation participant', function () {
+    $firstLawyer = userWithRole('lawyer');
+    $secondLawyer = userWithRole('lawyer');
+    $conversation = messagingConversation($firstLawyer, $secondLawyer);
+    $historicMessage = Message::factory()->for($conversation)->create(['sender_id' => $secondLawyer]);
+    $secondLawyer->forceFill(['is_active' => false])->save();
+    Notification::fake([MessageReceivedNotification::class]);
+
+    $this->actingAs($firstLawyer)->postJson(route('messages.store', $conversation), ['body' => 'Yeni mesaj'])->assertForbidden();
+
+    expect($conversation->messages()->pluck('id')->all())->toBe([$historicMessage->id]);
+    Notification::assertNotSentTo($secondLawyer, MessageReceivedNotification::class);
 });

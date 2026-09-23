@@ -61,6 +61,18 @@
                 @endforelse
                 <p class="hidden px-5 py-10 text-center text-sm text-slate-500" data-search-empty>Aramanızla eşleşen avukat bulunamadı.</p>
             </div>
+            @if($archivedLawyers->isNotEmpty())
+                <details class="border-t border-slate-200 p-2">
+                    <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-slate-600">Geçmiş görüşmeler ({{ $archivedLawyers->count() }})</summary>
+                    @foreach($archivedLawyers as $lawyer)
+                        <a class="block rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" href="{{ route('messages.index', ['conversation' => $lawyer['conversation_id']]) }}" data-lawyer-row data-lawyer-id="{{ $lawyer['id'] }}" data-lawyer-name="{{ $lawyer['name'] }}" data-lawyer-email="" data-conversation-id="{{ $lawyer['conversation_id'] }}">
+                            <span class="block font-medium">{{ $lawyer['name'] }}</span>
+                            <span class="block truncate text-xs text-slate-500" data-lawyer-preview>{{ $lawyer['last_message'] ? \Illuminate\Support\Str::limit($lawyer['last_message'], 48) : 'Salt okunur görüşme' }}</span>
+                            <time class="hidden" data-lawyer-time datetime="{{ $lawyer['last_message_at'] }}"></time>
+                        </a>
+                    @endforeach
+                </details>
+            @endif
         </aside>
 
         <div class="hidden min-h-[36rem] min-w-0 flex-col bg-slate-50/60 lg:flex lg:min-h-0" data-chat-panel>
@@ -120,6 +132,6 @@
         </div>
     </section>
 
-    <script nonce="{{ Vite::cspNonce() }}" type="application/json" data-messages-config>@json(['lawyers' => $lawyers, 'initial_conversation_id' => $initialConversationId, 'initial_lawyer_id' => $initialLawyerId])</script>
+    <script nonce="{{ Vite::cspNonce() }}" type="application/json" data-messages-config>@json(['lawyers' => $lawyers->concat($archivedLawyers), 'initial_conversation_id' => $initialConversationId, 'initial_lawyer_id' => $initialLawyerId])</script>
     @vite('resources/js/messages.js')
 </x-layouts.app>

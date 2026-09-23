@@ -42,7 +42,11 @@ class ClientCommunication extends Model
             $user->isManager() => $query,
             default => $query->where(fn (Builder $entries) => $entries
                 ->whereHas('client', fn (Builder $clients) => $clients->visibleTo($user))
-                ->where(fn (Builder $scope) => $scope->whereNull('case_file_id')->where('user_id', $user->id)->orWhereHas('caseFile', fn (Builder $cases) => $cases->visibleTo($user)))),
+                ->where(fn (Builder $scope) => $scope->where(fn (Builder $unlinked) => $unlinked
+                    ->whereNull('case_file_id')
+                    ->where(fn (Builder $owner) => $owner->where('user_id', $user->id)
+                        ->orWhereHas('client', fn (Builder $clients) => $clients->where('responsible_lawyer_id', $user->id))))
+                    ->orWhereHas('caseFile', fn (Builder $cases) => $cases->visibleTo($user)))),
         };
     }
 }

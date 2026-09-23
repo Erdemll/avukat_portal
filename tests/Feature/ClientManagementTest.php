@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\ClientCommunication;
 use App\Models\Party;
 use App\Models\PartyIdentifier;
+use App\Services\LawyerRetirementService;
 use Illuminate\Support\Facades\DB;
 
 it('lets managers create clients with encrypted identifiers', function () {
@@ -181,9 +182,30 @@ it('scopes clients to their creator or assigned legal cases', function () {
     ])->assertRedirect();
     $client = Client::query()->firstOrFail();
 
+    expect($client->responsible_lawyer_id)->toBe($lawyer->id);
     $this->actingAs($lawyer)->get(route('clients.show', $client))->assertSee('Mehmet Kaya');
     $this->actingAs($otherLawyer)->get(route('clients.show', $client))->assertForbidden();
     $this->actingAs($manager)->get(route('clients.show', $client))->assertSee('Mehmet Kaya');
+});
+
+it('lets a successor edit an unlinked client while retaining its original creator', function () {
+    $manager = userWithRole('manager');
+    $previousLawyer = userWithRole('lawyer');
+    $replacement = userWithRole('lawyer');
+    $party = Party::factory()->create(['created_by' => $previousLawyer]);
+    $client = Client::factory()->create(['party_id' => $party, 'created_by' => $previousLawyer, 'responsible_lawyer_id' => $previousLawyer]);
+    app(LawyerRetirementService::class)->retire($previousLawyer, $replacement, $manager);
+
+    $this->actingAs($replacement)->put(route('clients.update', $client), [
+        'type' => 'individual',
+        'name' => 'Güncel',
+        'surname' => 'Müvekkil',
+        'status' => 'active',
+        'lock_version' => $client->refresh()->lock_version,
+    ])->assertRedirect(route('clients.show', $client));
+
+    expect($party->fresh()->display_name)->toBe('Güncel Müvekkil');
+    $this->assertDatabaseHas('clients', ['id' => $client->id, 'created_by' => $previousLawyer->id, 'responsible_lawyer_id' => $replacement->id]);
 });
 
 it('lets only the lead lawyer edit a client linked to a legal case', function () {

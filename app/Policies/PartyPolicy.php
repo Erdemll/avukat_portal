@@ -22,7 +22,11 @@ class PartyPolicy
      */
     public function view(User $user, Party $party): bool
     {
-        return $user->isManager() || ($user->isLawyer() && ($party->created_by === $user->id || $party->activeCaseFiles()->visibleTo($user)->exists()));
+        return $user->isManager() || ($user->isLawyer() && (
+            ($party->created_by === $user->id && ($party->client?->responsible_lawyer_id === null || $party->client->responsible_lawyer_id === $user->id))
+            || $party->activeCaseFiles()->visibleTo($user)->exists()
+            || (! $party->activeCaseFiles()->exists() && $party->client()->where('responsible_lawyer_id', $user->id)->exists())
+        ));
     }
 
     /**
@@ -47,7 +51,8 @@ class PartyPolicy
         }
 
         if (! $party->activeCaseFiles()->exists()) {
-            return $party->created_by === $user->id;
+            return $party->client?->responsible_lawyer_id === $user->id
+                || ($party->created_by === $user->id && $party->client?->responsible_lawyer_id === null);
         }
 
         return ! $party->activeCaseFiles()

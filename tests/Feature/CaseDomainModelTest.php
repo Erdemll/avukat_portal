@@ -139,7 +139,7 @@ it('removes ended assignments from lawyer visibility without losing history', fu
     expect($caseFile->assignments()->count())->toBe(1);
 });
 
-it('prevents deactivating a lawyer who has an active legal case assignment', function () {
+it('requires a replacement before retiring a lawyer with an active legal case assignment', function () {
     $manager = userWithRole('manager');
     $lawyer = userWithRole('lawyer');
     $caseFile = CaseFile::factory()->create(['created_by' => $manager]);
@@ -149,8 +149,9 @@ it('prevents deactivating a lawyer who has an active legal case assignment', fun
         'assigned_by' => $manager,
     ]);
 
-    $this->actingAs($manager)->post(route('admin.users.deactivate', $lawyer))->assertSessionHasErrors('user');
+    $this->actingAs($manager)->post(route('admin.users.deactivate', $lawyer))->assertSessionHasErrors('replacement_lawyer_id');
     expect($lawyer->fresh()->is_active)->toBeTrue();
+    expect($caseFile->activeLawyers()->first()->is($lawyer))->toBeTrue();
 });
 
 it('links intake events parties clients and external proceedings to a legal case file', function () {

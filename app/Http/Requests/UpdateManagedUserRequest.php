@@ -26,6 +26,16 @@ class UpdateManagedUserRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->route('user');
+        if ($user->isLawyer() && ! $user->is_active) {
+            return [
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['prohibited'],
+                'tc_kimlik_no' => ['prohibited'],
+                'phone' => ['prohibited'],
+                'role_id' => ['prohibited'],
+            ];
+        }
+
         $isLawyer = $user->isLawyer() || $this->isLawyerRoleSelected();
 
         return [

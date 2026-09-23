@@ -48,7 +48,7 @@ class LegalTask extends Model
             default => $query->where(function (Builder $query) use ($user): void {
                 $query->where(function (Builder $personal) use ($user): void {
                     $personal->whereNull('case_file_id')
-                        ->where(fn (Builder $owner) => $owner->where('assigned_to', $user->id)->orWhere('created_by', $user->id));
+                        ->where('assigned_to', $user->id);
                 })->orWhere(function (Builder $caseTask) use ($user): void {
                     $caseTask->whereNotNull('case_file_id')
                         ->whereHas('caseFile', fn (Builder $cases) => $cases->visibleTo($user));

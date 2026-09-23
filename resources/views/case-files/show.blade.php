@@ -1,5 +1,6 @@
 @php
     $leadAssignment = $caseFile->assignments->first(fn ($assignment) => is_null($assignment->ended_at) && $assignment->role === App\CaseAssignmentRole::Lead);
+    $pastAssignments = $caseFile->assignments->whereNotNull('ended_at')->sortByDesc('ended_at');
     $primaryProceeding = $caseFile->proceedings->first();
     $activeLawyerIds = $caseFile->activeLawyers->pluck('id');
     $statusOptions = $caseFile->status === App\CaseFileStatus::Closed && !auth()->user()->isManager()
@@ -129,6 +130,20 @@
 
         <aside class="space-y-6">
             <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><h2 class="font-semibold text-slate-900">Sorumlu Avukatlar</h2><div class="mt-4 space-y-3">@foreach($caseFile->activeLawyers as $lawyer)<div class="flex items-center justify-between gap-3"><span class="text-sm font-medium text-slate-800">{{ $lawyer->name }}</span><span class="rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700">{{ $lawyer->pivot->role->label() }}</span></div>@endforeach</div></section>
+
+            @if($pastAssignments->isNotEmpty())
+                <details class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <summary class="cursor-pointer text-sm font-semibold text-slate-700">Geçmiş Avukat Atamaları</summary>
+                    <div class="mt-4 space-y-3">
+                        @foreach($pastAssignments as $assignment)
+                            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                <span class="text-slate-800">{{ $assignment->lawyer->name }} · {{ $assignment->role->label() }}</span>
+                                <span class="text-xs text-slate-500">{{ $assignment->ended_at->format('d.m.Y') }} tarihinde sonlandı</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </details>
+            @endif
 
             @if($canUpdateCase)
                 <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><h2 class="font-semibold text-slate-900">Dosya Durumu</h2><form class="mt-4 space-y-3" method="POST" action="{{ route('case-files.status.update', $caseFile) }}">@csrf @method('PATCH')<input type="hidden" name="lock_version" value="{{ $caseFile->lock_version }}"><select name="status" class="block w-full rounded-lg border-slate-300">@foreach($statusOptions as $status)<option value="{{ $status->value }}" @selected(old('status', $caseFile->status->value) === $status->value)>{{ $status->label() }}</option>@endforeach</select><textarea name="reason" rows="2" placeholder="Sonuçlandırma/kapatma gerekçesi" class="block w-full rounded-lg border-slate-300">{{ old('reason') }}</textarea>@error('status')<p class="text-xs text-red-600">{{ $message }}</p>@enderror @error('reason')<p class="text-xs text-red-600">{{ $message }}</p>@enderror<button class="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Durumu Güncelle</button></form></section>

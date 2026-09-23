@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreManagedUserRequest extends FormRequest
 {
@@ -39,6 +40,15 @@ class StoreManagedUserRequest extends FormRequest
             'role_id' => ['required', Rule::exists('roles', 'id')->where('is_active', true)],
             'is_active' => ['required', 'boolean'],
         ];
+    }
+
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if ($this->isLawyerRoleSelected() && ! $this->boolean('is_active')) {
+                $validator->errors()->add('is_active', 'Avukat hesabı aktif oluşturulmalıdır. Pasifleştirme için devralan avukat seçilir.');
+            }
+        }];
     }
 
     private function isLawyerRoleSelected(): bool

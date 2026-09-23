@@ -45,7 +45,9 @@ class EventManagementService
             $old = $event->assigned_lawyer_id;
             $event->forceFill(['assigned_lawyer_id' => $lawyer->id, 'assigned_at' => now()])->save();
             $this->audit->log(AuditAction::EventReassigned, $actor, $event, $event, 'Avukat ataması değiştirildi.', ['assigned_lawyer_id' => $old], ['assigned_lawyer_id' => $lawyer->id]);
-            DB::afterCommit(fn () => $this->notifications->assigned($event->load('assignedLawyer'), $actor));
+            if (! $event->trashed()) {
+                DB::afterCommit(fn () => $this->notifications->assigned($event->load('assignedLawyer'), $actor));
+            }
         });
     }
 }

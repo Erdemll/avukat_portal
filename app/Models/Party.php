@@ -66,8 +66,13 @@ class Party extends Model
         return match (true) {
             $user->isManager() => $query,
             $user->isLawyer() => $query->where(function (Builder $query) use ($user): void {
-                $query->where('created_by', $user->id)
-                    ->orWhereHas('activeCaseFiles', fn (Builder $caseFiles) => $caseFiles->visibleTo($user));
+                $query->where(fn (Builder $created) => $created->where('created_by', $user->id)
+                    ->where(fn (Builder $responsibility) => $responsibility->whereDoesntHave('client')
+                        ->orWhereHas('client', fn (Builder $client) => $client->where(fn (Builder $owner) => $owner
+                            ->whereNull('responsible_lawyer_id')->orWhere('responsible_lawyer_id', $user->id)))))
+                    ->orWhereHas('activeCaseFiles', fn (Builder $caseFiles) => $caseFiles->visibleTo($user))
+                    ->orWhere(fn (Builder $unlinked) => $unlinked->whereDoesntHave('activeCaseFiles')
+                        ->whereHas('client', fn (Builder $client) => $client->where('responsible_lawyer_id', $user->id)));
             }),
             default => $query->whereRaw('1 = 0'),
         };

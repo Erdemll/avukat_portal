@@ -21,7 +21,9 @@ class ClientCommunicationPolicy
     public function view(User $user, ClientCommunication $clientCommunication): bool
     {
         return $user->isManager() || ($user->can('view', $clientCommunication->client)
-            && ($clientCommunication->caseFile === null ? $clientCommunication->user_id === $user->id : $user->can('view', $clientCommunication->caseFile)));
+            && ($clientCommunication->caseFile === null
+                ? $clientCommunication->user_id === $user->id || $clientCommunication->client->responsible_lawyer_id === $user->id
+                : $user->can('view', $clientCommunication->caseFile)));
     }
 
     /**

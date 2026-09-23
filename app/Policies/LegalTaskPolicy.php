@@ -22,7 +22,7 @@ class LegalTaskPolicy
     {
         return $user->isManager() || ($legalTask->case_file_id !== null
             ? $user->can('view', $legalTask->caseFile)
-            : $legalTask->assigned_to === $user->id || $legalTask->created_by === $user->id);
+            : $legalTask->assigned_to === $user->id);
     }
 
     /**
@@ -40,7 +40,7 @@ class LegalTaskPolicy
     {
         return $user->isManager() || ($legalTask->case_file_id !== null
             ? $user->can('manageLegalOperations', $legalTask->caseFile)
-            : $legalTask->assigned_to === $user->id || $legalTask->created_by === $user->id);
+            : $legalTask->assigned_to === $user->id);
     }
 
     /**

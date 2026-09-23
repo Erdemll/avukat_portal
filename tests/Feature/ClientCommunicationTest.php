@@ -4,6 +4,8 @@ use App\CommunicationType;
 use App\Models\CaseFileParty;
 use App\Models\Client;
 use App\Models\ClientCommunication;
+use App\Models\Party;
+use App\Services\LawyerRetirementService;
 
 it('records client communications against matching visible case files', function () {
     $manager = userWithRole('manager');
@@ -51,4 +53,18 @@ it('prevents stale communication updates', function () {
         'communication_at' => now()->toDateTimeString(),
         'lock_version' => $communication->lock_version + 1,
     ])->assertSessionHasErrors('lock_version');
+});
+
+it('shows a successor past unlinked client communications without changing the author', function () {
+    $manager = userWithRole('manager');
+    $previousLawyer = userWithRole('lawyer');
+    $replacement = userWithRole('lawyer');
+    $party = Party::factory()->create(['created_by' => $previousLawyer]);
+    $client = Client::factory()->create(['party_id' => $party, 'created_by' => $previousLawyer, 'responsible_lawyer_id' => $previousLawyer]);
+    $communication = ClientCommunication::factory()->create(['client_id' => $client, 'user_id' => $previousLawyer, 'case_file_id' => null, 'subject' => 'Eski görüşme']);
+    app(LawyerRetirementService::class)->retire($previousLawyer, $replacement, $manager);
+
+    $this->actingAs($replacement)->get(route('client-communications.show', $communication))->assertOk()->assertSee('Eski görüşme');
+    expect($replacement->can('update', $communication))->toBeFalse();
+    expect($communication->fresh()->user_id)->toBe($previousLawyer->id);
 });
