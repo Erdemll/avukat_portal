@@ -113,6 +113,16 @@ class User extends Authenticatable
         return $this->hasRole('lawyer');
     }
 
+    public function isAssistant(): bool
+    {
+        return $this->hasRole('assistant');
+    }
+
+    public function isLegalWorker(): bool
+    {
+        return $this->isLawyer() || $this->isAssistant();
+    }
+
     public function isEmployee(): bool
     {
         return $this->hasRole('employee');

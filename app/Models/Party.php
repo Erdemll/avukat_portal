@@ -65,7 +65,7 @@ class Party extends Model
     {
         return match (true) {
             $user->isManager() => $query,
-            $user->isLawyer() => $query->where(function (Builder $query) use ($user): void {
+            $user->isLegalWorker() => $query->where(function (Builder $query) use ($user): void {
                 $query->where(fn (Builder $created) => $created->where('created_by', $user->id)
                     ->where(fn (Builder $responsibility) => $responsibility->whereDoesntHave('client')
                         ->orWhereHas('client', fn (Builder $client) => $client->where(fn (Builder $owner) => $owner

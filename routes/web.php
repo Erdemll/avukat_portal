@@ -85,7 +85,7 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('deadlines', DeadlineController::class)->except(['show', 'destroy']);
     Route::resource('legal-tasks', LegalTaskController::class)->parameters(['legal-tasks' => 'legalTask'])->except(['show', 'destroy']);
     Route::get('/legal-calendar', LegalCalendarController::class)->name('legal-calendar.index');
-    Route::resource('service-notices', ServiceNoticeController::class)->parameters(['service-notices' => 'serviceNotice'])->except(['show', 'destroy']);
+    Route::resource('service-notices', ServiceNoticeController::class)->parameters(['service-notices' => 'serviceNotice'])->except(['show']);
     Route::resource('mediations', MediationController::class)->except(['show', 'destroy']);
     Route::get('/financial-entries', [CaseFinancialEntryController::class, 'index'])->name('financial-entries.index');
     Route::post('/financial-entries', [CaseFinancialEntryController::class, 'store'])->name('financial-entries.store');

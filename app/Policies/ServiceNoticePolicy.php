@@ -12,7 +12,7 @@ class ServiceNoticePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class ServiceNoticePolicy
      */
     public function view(User $user, ServiceNotice $serviceNotice): bool
     {
-        return $user->can('view', $serviceNotice->caseFile);
+        return $user->can('viewContent', $serviceNotice->caseFile);
     }
 
     /**
@@ -28,7 +28,7 @@ class ServiceNoticePolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -44,7 +44,9 @@ class ServiceNoticePolicy
      */
     public function delete(User $user, ServiceNotice $serviceNotice): bool
     {
-        return false;
+        return $user->isLegalWorker()
+            && $serviceNotice->created_by === $user->id
+            && $user->can('manageLegalOperations', $serviceNotice->caseFile);
     }
 
     /**

@@ -46,8 +46,8 @@ class StoreConversationRequest extends FormRequest
                 return;
             }
 
-            if ($target === null || ! $target->isLawyer() || ! $target->is_active) {
-                $validator->errors()->add('user_id', 'Yalnızca aktif bir avukatla mesajlaşabilirsiniz.');
+            if ($target === null || ! $target->isLegalWorker() || ! $target->is_active) {
+                $validator->errors()->add('user_id', 'Yalnızca aktif bir avukat veya asistanla mesajlaşabilirsiniz.');
             }
         }];
     }

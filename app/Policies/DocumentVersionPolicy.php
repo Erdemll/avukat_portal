@@ -12,7 +12,7 @@ class DocumentVersionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -28,7 +28,7 @@ class DocumentVersionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**

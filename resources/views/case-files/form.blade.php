@@ -27,7 +27,7 @@
                 @if(!$isEditing)
                     <section class="rounded-xl bg-slate-50 p-5">
                         <h2 class="font-semibold text-slate-900">Avukat Atamaları</h2>
-                        @if(auth()->user()->isManager())
+                        @if(auth()->user()->isManager() || auth()->user()->isAssistant())
                             <p class="mt-1 text-xs text-slate-500">En az bir avukat ve bunlardan bir lider avukat seçin.</p>
                             <div class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                 @foreach($lawyers as $lawyer)

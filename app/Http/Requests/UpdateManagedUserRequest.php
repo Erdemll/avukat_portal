@@ -36,7 +36,7 @@ class UpdateManagedUserRequest extends FormRequest
             ];
         }
 
-        $isLawyer = $user->isLawyer() || $this->isLawyerRoleSelected();
+        $isLawyer = $this->isLawyerRoleSelected();
 
         return [
             'name' => ['required', 'string', 'max:255'],

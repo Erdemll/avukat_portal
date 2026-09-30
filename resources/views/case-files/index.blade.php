@@ -1,9 +1,9 @@
-<x-layouts.app title="Dosyalarım">
+<x-layouts.app :title="auth()->user()->isAssistant() ? 'Hukuki Dosyalar' : 'Dosyalarım'">
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Hukuk Operasyonu</p>
-            <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-950">Dosyalarım</h1>
-            <p class="mt-1 text-sm text-slate-500">Aktif dava, icra ve diğer hukuki dosyalarınızı tek merkezden yönetin.</p>
+            <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-950">{{ auth()->user()->isAssistant() ? 'Hukuki Dosyalar' : 'Dosyalarım' }}</h1>
+            <p class="mt-1 text-sm text-slate-500">{{ auth()->user()->isAssistant() ? 'Dosyaları görüntüleyin ve avukat atamalarını yönetin.' : 'Aktif dava, icra ve diğer hukuki dosyalarınızı tek merkezden yönetin.' }}</p>
         </div>
         @can('create', App\Models\CaseFile::class)
             <a class="rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" href="{{ route('case-files.create') }}">Yeni Hukuki Dosya</a>
@@ -26,7 +26,7 @@
                 <option value="{{ $caseType->id }}" @selected((string) request('case_type') === (string) $caseType->id)>{{ $caseType->name }}</option>
             @endforeach
         </select>
-        @if(auth()->user()->isManager())
+        @if(auth()->user()->isManager() || auth()->user()->isAssistant())
             <select name="lawyer" class="rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 <option value="">Tüm avukatlar</option>
                 @foreach($lawyers as $lawyer)

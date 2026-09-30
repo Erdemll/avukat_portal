@@ -12,7 +12,7 @@ class ClientPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        return $user->isManager() || ($user->isLawyer() && (
+        return $user->isManager() || ($user->isLegalWorker() && (
             ($client->created_by === $user->id && ($client->responsible_lawyer_id === null || $client->responsible_lawyer_id === $user->id))
             || $user->can('view', $client->party)
         ));
@@ -31,7 +31,7 @@ class ClientPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -39,6 +39,10 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
+        if ($user->isAssistant() && $client->party->caseFiles()->where('created_by', '!=', $user->id)->exists()) {
+            return false;
+        }
+
         return $this->view($user, $client) && $user->can('update', $client->party);
     }
 
@@ -47,7 +51,7 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client): bool
     {
-        return $user->isManager() || ($user->isLawyer() && (
+        return $user->isManager() || ($user->isLegalWorker() && (
             ($client->created_by === $user->id && ($client->responsible_lawyer_id === null || $client->responsible_lawyer_id === $user->id))
             || ($client->responsible_lawyer_id === $user->id && ! $client->party->activeCaseFiles()->exists())
             || $client->party->caseFiles()->visibleTo($user)->exists()

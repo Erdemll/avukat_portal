@@ -12,7 +12,7 @@ class HearingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class HearingPolicy
      */
     public function view(User $user, Hearing $hearing): bool
     {
-        return $user->can('view', $hearing->caseFile);
+        return $user->can('viewContent', $hearing->caseFile);
     }
 
     /**
@@ -28,7 +28,7 @@ class HearingPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**

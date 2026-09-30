@@ -34,6 +34,7 @@ enum AuditAction: string
     case LegalTaskUpdated = 'LEGAL_TASK_UPDATED';
     case ServiceNoticeCreated = 'SERVICE_NOTICE_CREATED';
     case ServiceNoticeUpdated = 'SERVICE_NOTICE_UPDATED';
+    case ServiceNoticeDeleted = 'SERVICE_NOTICE_DELETED';
     case MediationCreated = 'MEDIATION_CREATED';
     case MediationUpdated = 'MEDIATION_UPDATED';
     case FinancialEntryCreated = 'FINANCIAL_ENTRY_CREATED';

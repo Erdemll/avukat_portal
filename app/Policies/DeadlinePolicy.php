@@ -12,7 +12,7 @@ class DeadlinePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class DeadlinePolicy
      */
     public function view(User $user, Deadline $deadline): bool
     {
-        return $user->can('view', $deadline->caseFile);
+        return $user->can('viewContent', $deadline->caseFile);
     }
 
     /**
@@ -28,7 +28,7 @@ class DeadlinePolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**

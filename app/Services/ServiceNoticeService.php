@@ -57,4 +57,22 @@ class ServiceNoticeService
             return $notice;
         });
     }
+
+    /** @param array{lock_version: int} $data */
+    public function delete(ServiceNotice $notice, array $data, User $actor): void
+    {
+        DB::transaction(function () use ($notice, $data, $actor): void {
+            $notice = ServiceNotice::query()->lockForUpdate()->findOrFail($notice->id);
+            $caseFile = CaseFile::query()->lockForUpdate()->findOrFail($notice->case_file_id);
+            $notice->setRelation('caseFile', $caseFile);
+            Gate::forUser($actor)->authorize('delete', $notice);
+
+            if ($notice->lock_version !== (int) $data['lock_version']) {
+                throw ValidationException::withMessages(['lock_version' => 'Tebligat başka bir kullanıcı tarafından güncellendi.']);
+            }
+
+            $this->audit->log(AuditAction::ServiceNoticeDeleted, $actor, auditable: $notice, description: 'Tebligat silindi.', oldValues: $notice->only(['case_file_id', 'type', 'sender', 'recipient', 'notification_date', 'service_date', 'description', 'document_id', 'created_by']), caseFile: $caseFile);
+            $notice->delete();
+        });
+    }
 }

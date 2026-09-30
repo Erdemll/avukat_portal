@@ -52,7 +52,7 @@ class StoreClientCommunicationRequest extends FormRequest
             }
             if ($this->filled('case_file_id')) {
                 $caseFile = CaseFile::query()->find($this->integer('case_file_id'));
-                if ($caseFile === null || ! $this->user()->can('view', $caseFile) || ! $caseFile->activeParties()->whereKey($client->party_id)->exists()) {
+                if ($caseFile === null || ! $this->user()->can('manageLegalOperations', $caseFile) || ! $caseFile->activeParties()->whereKey($client->party_id)->exists()) {
                     $validator->errors()->add('case_file_id', 'Seçilen dosya bu müvekkile ait değil veya erişiminiz yok.');
                 }
             }

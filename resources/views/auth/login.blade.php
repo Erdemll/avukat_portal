@@ -5,7 +5,7 @@
     description="Rolünüze uygun giriş yöntemini seçerek güvenli oturumunuzu başlatın."
 >
     <div class="grid grid-cols-2 rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Giriş yöntemi">
-        <button class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-indigo-800 shadow-sm" id="tab-email" type="button" role="tab" aria-selected="true">Yönetici / Çalışan</button>
+        <button class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-indigo-800 shadow-sm" id="tab-email" type="button" role="tab" aria-selected="true">Yönetici / Çalışan / Asistan</button>
         <button class="rounded-md px-3 py-2.5 text-sm font-medium text-slate-500" id="tab-lawyer" type="button" role="tab" aria-selected="false">Avukat</button>
     </div>
 

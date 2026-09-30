@@ -12,7 +12,7 @@ class LegalTaskPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -21,7 +21,7 @@ class LegalTaskPolicy
     public function view(User $user, LegalTask $legalTask): bool
     {
         return $user->isManager() || ($legalTask->case_file_id !== null
-            ? $user->can('view', $legalTask->caseFile)
+            ? $user->can('viewContent', $legalTask->caseFile)
             : $legalTask->assigned_to === $user->id);
     }
 
@@ -30,7 +30,7 @@ class LegalTaskPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**

@@ -12,7 +12,7 @@ class CaseFilePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class CaseFilePolicy
      */
     public function view(User $user, CaseFile $caseFile): bool
     {
-        return $user->isManager() || ($user->isLawyer() && $caseFile->assignments()
+        return $user->isManager() || $user->isAssistant() || ($user->isLawyer() && $caseFile->assignments()
             ->where('lawyer_id', $user->id)
             ->whereNull('ended_at')
             ->exists());
@@ -31,7 +31,7 @@ class CaseFilePolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -39,7 +39,12 @@ class CaseFilePolicy
      */
     public function update(User $user, CaseFile $caseFile): bool
     {
-        return $this->view($user, $caseFile);
+        return $user->isAssistant() ? $caseFile->created_by === $user->id : $this->view($user, $caseFile);
+    }
+
+    public function viewContent(User $user, CaseFile $caseFile): bool
+    {
+        return $this->update($user, $caseFile);
     }
 
     /**
@@ -68,7 +73,7 @@ class CaseFilePolicy
 
     public function assign(User $user, CaseFile $caseFile): bool
     {
-        return $user->isManager();
+        return $user->isManager() || $user->isAssistant();
     }
 
     public function manageParties(User $user, CaseFile $caseFile): bool

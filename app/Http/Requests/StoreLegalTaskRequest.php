@@ -32,7 +32,7 @@ class StoreLegalTaskRequest extends FormRequest
     {
         return [
             'case_file_id' => ['nullable', 'integer', Rule::exists(CaseFile::class, 'id')],
-            'assigned_to' => ['required', 'integer', Rule::exists(User::class, 'id')->where('is_active', true)->whereIn('role_id', Role::query()->whereIn('slug', ['lawyer', 'manager'])->select('id'))],
+            'assigned_to' => ['required', 'integer', Rule::exists(User::class, 'id')->where('is_active', true)->whereIn('role_id', Role::query()->whereIn('slug', ['lawyer', 'manager', 'assistant'])->select('id'))],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
             'priority' => ['required', Rule::enum(EventPriority::class)],

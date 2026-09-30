@@ -30,7 +30,7 @@ class EventCaseFileController extends Controller
             ]),
             'sourceEvent' => $event,
             'caseTypes' => CaseType::query()->where('is_active', true)->orderBy('name')->get(),
-            'lawyers' => $request->user()->isManager()
+            'lawyers' => ($request->user()->isManager() || $request->user()->isAssistant())
                 ? User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->where('slug', 'lawyer'))->orderBy('name')->get()
                 : collect([$request->user()]),
             'clients' => Client::query()->visibleTo($request->user())->with('party')->where('status', 'active')->latest()->limit(100)->get(),

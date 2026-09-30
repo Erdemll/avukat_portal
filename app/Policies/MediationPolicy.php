@@ -12,7 +12,7 @@ class MediationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class MediationPolicy
      */
     public function view(User $user, Mediation $mediation): bool
     {
-        return $user->can('view', $mediation->caseFile);
+        return $user->can('viewContent', $mediation->caseFile);
     }
 
     /**
@@ -28,7 +28,7 @@ class MediationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**

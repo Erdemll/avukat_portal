@@ -12,7 +12,7 @@ class EventPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isEmployee() || $user->isLawyer();
+        return $user->isManager() || $user->isEmployee() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,9 @@ class EventPolicy
      */
     public function view(User $user, Event $event): bool
     {
-        return $user->isManager() || ($user->isEmployee() && $event->created_by === $user->id) || ($user->isLawyer() && $event->assigned_lawyer_id === $user->id);
+        return $user->isManager() || ($user->isEmployee() && $event->created_by === $user->id)
+            || ($user->isLawyer() && $event->assigned_lawyer_id === $user->id)
+            || ($user->isAssistant() && $event->caseFiles()->where('created_by', $user->id)->exists());
     }
 
     /**

@@ -92,14 +92,19 @@ class UserController extends Controller
                 return;
             }
             $changingRole = $lockedUser->role_id !== $request->integer('role_id');
-            if ($changingRole && ! $lockedUser->is_active && Role::query()->whereKey($request->integer('role_id'))->where('slug', 'lawyer')->exists()) {
+            $selectedRole = Role::query()->findOrFail($request->integer('role_id'));
+            if ($changingRole && ! $lockedUser->is_active && $selectedRole->slug === 'lawyer') {
                 throw ValidationException::withMessages(['role_id' => 'Pasif kullanıcı avukat rolüne geçirilmeden önce aktifleştirilmelidir.']);
             }
             if ($changingRole && $lockedUser->isLawyer() && $this->lawyerHasActiveWork($lockedUser)) {
                 throw ValidationException::withMessages(['role_id' => 'Bu avukata atanmış aktif işler bulunduğu için rolü değiştirilemez.']);
             }
             $oldRole = $lockedUser->role_id;
-            $lockedUser->fill($request->validated())->save();
+            $lockedUser->fill($request->validated());
+            if ($selectedRole->slug === 'assistant') {
+                $lockedUser->tc_kimlik_no = null;
+            }
+            $lockedUser->save();
             $audit->log($changingRole ? AuditAction::UserRoleChanged : AuditAction::UserUpdated, $request->user(), auditable: $lockedUser, description: 'Kullanıcı güncellendi.', oldValues: $changingRole ? ['role_id' => $oldRole] : [], newValues: $changingRole ? ['role_id' => $lockedUser->role_id] : []);
         });
 

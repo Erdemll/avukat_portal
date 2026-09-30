@@ -38,7 +38,7 @@ class HearingController extends Controller
     {
         Gate::authorize('create', Hearing::class);
 
-        $selectedCase = $request->filled('case_file') ? CaseFile::query()->visibleTo($request->user())->find($request->integer('case_file')) : null;
+        $selectedCase = $request->filled('case_file') ? CaseFile::query()->visibleTo($request->user())->when($request->user()->isAssistant(), fn ($cases) => $cases->where('created_by', $request->user()->id))->find($request->integer('case_file')) : null;
 
         return view('hearings.form', ['hearing' => new Hearing(['case_file_id' => $selectedCase?->id]), ...$this->formData($request->user(), $selectedCase)]);
     }
@@ -93,9 +93,9 @@ class HearingController extends Controller
     private function formData(User $user, ?CaseFile $currentCase = null): array
     {
         return [
-            'caseFiles' => CaseFile::query()->visibleTo($user)->where(fn ($query) => $query->where('status', '!=', 'closed')->when($currentCase, fn ($cases) => $cases->orWhereKey($currentCase)))->orderBy('case_no')->get(),
+            'caseFiles' => CaseFile::query()->visibleTo($user)->when($user->isAssistant(), fn ($cases) => $cases->where('created_by', $user->id))->where(fn ($query) => $query->where('status', '!=', 'closed')->when($currentCase, fn ($cases) => $cases->orWhereKey($currentCase)))->orderBy('case_no')->get(),
             'lawyers' => $currentCase?->activeLawyers()->orderBy('name')->get()
-                ?? ($user->isManager() ? User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->where('slug', 'lawyer'))->orderBy('name')->get() : collect([$user])),
+                ?? (($user->isManager() || $user->isAssistant()) ? User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->where('slug', 'lawyer'))->orderBy('name')->get() : collect([$user])),
         ];
     }
 }

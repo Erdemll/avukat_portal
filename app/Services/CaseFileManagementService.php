@@ -64,8 +64,9 @@ class CaseFileManagementService
             $this->storeProceeding($caseFile, $data);
             $this->attachClients($caseFile, $data['client_party_ids'] ?? [], $actor);
 
-            $lawyerIds = $actor->isManager() ? $data['lawyer_ids'] : [$actor->id];
-            $leadLawyerId = $actor->isManager() ? (int) $data['lead_lawyer_id'] : $actor->id;
+            $canChooseLawyers = $actor->isManager() || $actor->isAssistant();
+            $lawyerIds = $canChooseLawyers ? $data['lawyer_ids'] : [$actor->id];
+            $leadLawyerId = $canChooseLawyers ? (int) $data['lead_lawyer_id'] : $actor->id;
             $caseFile = $this->assignments->sync($caseFile, $actor, $lawyerIds, $leadLawyerId);
 
             if ($sourceEvent !== null) {

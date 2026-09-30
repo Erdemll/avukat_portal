@@ -24,7 +24,7 @@ class ClientCommunicationService
             $client = Client::query()->lockForUpdate()->findOrFail($data['client_id']);
             Gate::forUser($actor)->authorize('view', $client);
             if ($caseFile !== null) {
-                Gate::forUser($actor)->authorize('view', $caseFile);
+                Gate::forUser($actor)->authorize('manageLegalOperations', $caseFile);
                 $this->ensureClientBelongsToCase($client, $caseFile);
             }
             $communication = new ClientCommunication(Arr::except($data, ['client_id', 'case_file_id']));
@@ -47,7 +47,7 @@ class ClientCommunicationService
             $caseFiles = CaseFile::query()->whereIn('id', $caseFileIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $sourceCaseFile = $communication->case_file_id !== null ? $caseFiles->get($communication->case_file_id) : null;
             if ($sourceCaseFile !== null) {
-                Gate::forUser($actor)->authorize('view', $sourceCaseFile);
+                Gate::forUser($actor)->authorize('manageLegalOperations', $sourceCaseFile);
             }
             Gate::forUser($actor)->authorize('update', $communication);
             if ($communication->lock_version !== (int) $data['lock_version']) {
@@ -59,7 +59,7 @@ class ClientCommunicationService
             $caseFile = ! empty($data['case_file_id']) ? $caseFiles->get((int) $data['case_file_id']) : null;
             Gate::forUser($actor)->authorize('view', $client);
             if ($caseFile !== null) {
-                Gate::forUser($actor)->authorize('view', $caseFile);
+                Gate::forUser($actor)->authorize('manageLegalOperations', $caseFile);
                 $this->ensureClientBelongsToCase($client, $caseFile);
             }
             $oldValues = $communication->only(['client_id', 'case_file_id', 'type', 'subject', 'description', 'communication_at']);

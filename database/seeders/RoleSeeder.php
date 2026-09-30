@@ -15,6 +15,7 @@ class RoleSeeder extends Seeder
         foreach ([
             ['name' => 'Çalışan', 'slug' => 'employee'],
             ['name' => 'Avukat', 'slug' => 'lawyer'],
+            ['name' => 'Asistan', 'slug' => 'assistant'],
             ['name' => 'Yönetici', 'slug' => 'manager'],
         ] as $role) {
             Role::query()->updateOrCreate(['slug' => $role['slug']], $role);

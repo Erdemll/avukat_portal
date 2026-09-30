@@ -23,7 +23,7 @@ class MessageController extends Controller
 
         $lawyers = User::query()
             ->select(['id', 'name', 'email'])
-            ->whereHas('role', fn ($query) => $query->where('slug', 'lawyer'))
+            ->whereHas('role', fn ($query) => $query->whereIn('slug', ['lawyer', 'assistant']))
             ->where('is_active', true)
             ->whereKeyNot($request->user()->id)
             ->orderBy('name')

@@ -19,7 +19,7 @@ class StoreCaseFileRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        if ($this->user()?->isManager() && $this->filled('lead_lawyer_id')) {
+        if (($this->user()?->isManager() || $this->user()?->isAssistant()) && $this->filled('lead_lawyer_id')) {
             $this->merge(['lawyer_ids' => collect($this->input('lawyer_ids', []))->push($this->input('lead_lawyer_id'))->unique()->values()->all()]);
         }
     }
@@ -45,9 +45,9 @@ class StoreCaseFileRequest extends FormRequest
             'priority' => ['required', Rule::enum(EventPriority::class)],
             'description' => ['nullable', 'string', 'max:10000'],
             'opened_at' => ['required', 'date'],
-            'lawyer_ids' => [Rule::requiredIf($this->user()?->isManager()), Rule::prohibitedIf($this->user()?->isLawyer()), 'array', 'min:1'],
+            'lawyer_ids' => [Rule::requiredIf($this->user()?->isManager() || $this->user()?->isAssistant()), Rule::prohibitedIf($this->user()?->isLawyer()), 'array', 'min:1'],
             'lawyer_ids.*' => ['integer', 'distinct', $this->activeLawyerRule()],
-            'lead_lawyer_id' => [Rule::requiredIf($this->user()?->isManager()), Rule::prohibitedIf($this->user()?->isLawyer()), 'integer', $this->activeLawyerRule()],
+            'lead_lawyer_id' => [Rule::requiredIf($this->user()?->isManager() || $this->user()?->isAssistant()), Rule::prohibitedIf($this->user()?->isLawyer()), 'integer', $this->activeLawyerRule()],
             'client_party_ids' => ['nullable', 'array'],
             'client_party_ids.*' => ['integer', 'distinct', Rule::exists(Client::class, 'party_id')],
             'proceeding_type' => ['nullable', Rule::enum(CaseProceedingType::class), 'required_with:courthouse,authority_name,court_type,principal_year,principal_number,decision_year,decision_number,external_file_number'],
@@ -66,7 +66,7 @@ class StoreCaseFileRequest extends FormRequest
     {
         return [function (Validator $validator): void {
             $lawyerIds = collect($this->input('lawyer_ids', []))->map(fn ($id): int => (int) $id);
-            if ($this->user()?->isManager() && ! $lawyerIds->contains($this->integer('lead_lawyer_id'))) {
+            if (($this->user()?->isManager() || $this->user()?->isAssistant()) && ! $lawyerIds->contains($this->integer('lead_lawyer_id'))) {
                 $validator->errors()->add('lead_lawyer_id', 'Lider avukat, atanan avukatlar arasında bulunmalıdır.');
             }
 

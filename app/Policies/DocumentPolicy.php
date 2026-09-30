@@ -9,7 +9,7 @@ class DocumentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -18,7 +18,7 @@ class DocumentPolicy
     public function view(User $user, Document $document): bool
     {
         return match (true) {
-            $document->case_file_id !== null => $user->can('view', $document->caseFile),
+            $document->case_file_id !== null => $user->can('viewContent', $document->caseFile),
             $document->event_id !== null => $user->can('view', $document->event),
             default => false,
         };
@@ -50,7 +50,7 @@ class DocumentPolicy
 
     public function editUdf(User $user, Document $document): bool
     {
-        return $user->isLawyer()
+        return $user->isLegalWorker()
             && $this->viewUdf($user, $document)
             && $user->can('manageDocuments', $document->caseFile);
     }
@@ -60,7 +60,9 @@ class DocumentPolicy
      */
     public function delete(User $user, Document $document): bool
     {
-        return ($user->isManager() || $user->isLawyer()) && $this->view($user, $document);
+        return ($user->isManager() || $user->isLegalWorker())
+            && $this->view($user, $document)
+            && (! $user->isAssistant() || $document->case_file_id === null || $user->can('manageDocuments', $document->caseFile));
     }
 
     /**

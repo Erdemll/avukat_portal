@@ -36,19 +36,19 @@ class CaseFileController extends Controller
         $search = str_replace(['%', '_'], ['\%', '\_'], $request->string('search')->trim()->toString());
 
         $caseFiles = CaseFile::query()
-            ->visibleTo($user)
+            ->when(! $user->isAssistant(), fn ($query) => $query->visibleTo($user))
             ->with(['caseType', 'activeLawyers'])
             ->when($search !== '', fn ($query) => $query->where(fn ($nested) => $nested
                 ->where('case_no', 'like', '%'.$search.'%')
                 ->orWhere('title', 'like', '%'.$search.'%')
-                ->orWhereHas('activeParties', fn ($parties) => $parties->where(fn ($party) => $party
+                ->when(! $user->isAssistant(), fn ($cases) => $cases->orWhereHas('activeParties', fn ($parties) => $parties->where(fn ($party) => $party
                     ->where('name', 'like', '%'.$search.'%')
                     ->orWhere('surname', 'like', '%'.$search.'%')
-                    ->orWhere('company_name', 'like', '%'.$search.'%')))))
+                    ->orWhere('company_name', 'like', '%'.$search.'%'))))))
             ->when($status !== '', fn ($query) => $query->where('status', $status))
             ->when($category !== '', fn ($query) => $query->whereHas('caseType', fn ($types) => $types->where('category', $category)))
             ->when($request->filled('case_type'), fn ($query) => $query->where('case_type_id', $request->integer('case_type')))
-            ->when($user->isManager() && $request->filled('lawyer'), fn ($query) => $query->whereHas('assignments', fn ($assignments) => $assignments
+            ->when(($user->isManager() || $user->isAssistant()) && $request->filled('lawyer'), fn ($query) => $query->whereHas('assignments', fn ($assignments) => $assignments
                 ->where('lawyer_id', $request->integer('lawyer'))
                 ->whereNull('ended_at')))
             ->orderByDesc('updated_at')
@@ -59,7 +59,7 @@ class CaseFileController extends Controller
         return view('case-files.index', [
             'caseFiles' => $caseFiles,
             'caseTypes' => CaseType::query()->where('is_active', true)->orderBy('name')->get(),
-            'lawyers' => $user->isManager() ? $this->lawyers() : collect(),
+            'lawyers' => ($user->isManager() || $user->isAssistant()) ? $this->lawyers() : collect(),
         ]);
     }
 
@@ -89,6 +89,17 @@ class CaseFileController extends Controller
     public function show(Request $request, CaseFile $caseFile, AuditService $audit): View
     {
         Gate::authorize('view', $caseFile);
+        $audit->safelyLog(AuditAction::CaseFileViewed, $request->user(), auditable: $caseFile, description: 'Hukuki dosya görüntülendi.', caseFile: $caseFile);
+
+        if ($request->user()->isAssistant() && $caseFile->created_by !== $request->user()->id) {
+            $caseFile->load(['caseType', 'activeLawyers', 'assignments.lawyer']);
+
+            return view('case-files.assignment-only', [
+                'caseFile' => $caseFile,
+                'lawyers' => $this->lawyers(),
+            ]);
+        }
+
         $caseFile->load([
             'caseType', 'creator', 'activeLawyers', 'assignments.lawyer',
             'events' => fn ($query) => $query->visibleTo($request->user()),
@@ -106,18 +117,17 @@ class CaseFileController extends Controller
             'statusHistories' => fn ($query) => $query->with('changedBy')->latest('changed_at'),
             'notes' => fn ($query) => $query->with('author')->latest('occurred_at'),
         ]);
-        $audit->safelyLog(AuditAction::CaseFileViewed, $request->user(), auditable: $caseFile, description: 'Hukuki dosya görüntülendi.', caseFile: $caseFile);
         $canUpdateCase = $request->user()->can('update', $caseFile);
 
         return view('case-files.show', [
             'caseFile' => $caseFile,
-            'lawyers' => $request->user()->isManager() ? $this->lawyers() : collect(),
+            'lawyers' => $request->user()->can('assign', $caseFile) ? $this->lawyers() : collect(),
             'availableParties' => Party::query()->visibleTo($request->user())->orderBy('company_name')->orderBy('name')->limit(100)->get(),
             'canUpdateCase' => $canUpdateCase,
             'canManageParties' => $canUpdateCase,
             'canManageDocuments' => $canUpdateCase,
             'canManageOperations' => $canUpdateCase,
-            'canAssignCase' => $request->user()->isManager(),
+            'canAssignCase' => $request->user()->can('assign', $caseFile),
             'canCreateFinancialEntry' => $request->user()->isManager(),
         ]);
     }
@@ -161,7 +171,7 @@ class CaseFileController extends Controller
                 ->where(fn ($query) => $query->where('is_active', true)->when($caseFile->exists, fn ($types) => $types->orWhereKey($caseFile->case_type_id)))
                 ->orderBy('name')
                 ->get(),
-            'lawyers' => $user->isManager() ? $this->lawyers() : collect([$user]),
+            'lawyers' => ($user->isManager() || $user->isAssistant()) ? $this->lawyers() : collect([$user]),
             'clients' => Client::query()->visibleTo($user)->with('party')->where('status', 'active')->latest()->limit(100)->get(),
         ];
     }

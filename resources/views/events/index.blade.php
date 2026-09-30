@@ -66,7 +66,7 @@
                     @endforeach
                 </select>
             </div>
-            @if(! $user->isLawyer())
+            @if(! $user->isLegalWorker())
                 <div>
                     <label for="assigned_lawyer" class="block text-sm font-medium text-slate-700">Atanan Avukat</label>
                     <select id="assigned_lawyer" name="assigned_lawyer"
@@ -78,7 +78,7 @@
                     </select>
                 </div>
             @endif
-            @if($user->isManager() || $user->isLawyer())
+            @if($user->isManager() || $user->isLegalWorker())
                 <div>
                     <label for="creator" class="block text-sm font-medium text-slate-700">Oluşturan</label>
                     <select id="creator" name="creator"
@@ -145,7 +145,7 @@
                     @if(! $user->isEmployee())
                         <th class="px-4 py-3 font-medium text-slate-500">Oluşturan</th>
                     @endif
-                    @if(! $user->isLawyer())
+                    @if(! $user->isLegalWorker())
                         <th class="px-4 py-3 font-medium text-slate-500">Avukat</th>
                     @endif
                     <th class="px-4 py-3 font-medium text-slate-500">Durum</th>
@@ -163,7 +163,7 @@
                         @if(! $user->isEmployee())
                             <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $event->creator->name }}</td>
                         @endif
-                        @if(! $user->isLawyer())
+                        @if(! $user->isLegalWorker())
                             <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $event->assignedLawyer->name }}</td>
                         @endif
                         <td class="whitespace-nowrap px-4 py-3">
@@ -227,7 +227,7 @@
                                                                                                                                                                                                                                                 ">{{ $event->priority->label() }}</span>
                         </dd>
                     </div>
-                    @if(! $user->isLawyer())
+                    @if(! $user->isLegalWorker())
                         <div>
                             <dt class="text-xs font-medium text-slate-500">Avukat</dt>
                             <dd class="text-slate-700">{{ $event->assignedLawyer->name }}</dd>

@@ -12,7 +12,7 @@ class CaseFinancialEntryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class CaseFinancialEntryPolicy
      */
     public function view(User $user, CaseFinancialEntry $caseFinancialEntry): bool
     {
-        return $user->can('view', $caseFinancialEntry->caseFile);
+        return $user->can('viewContent', $caseFinancialEntry->caseFile);
     }
 
     /**

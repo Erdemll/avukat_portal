@@ -156,6 +156,7 @@ class CaseFile extends Model
     {
         return match (true) {
             $user->isManager() => $query,
+            $user->isAssistant() => $query->where('created_by', $user->id),
             $user->isLawyer() => $query->whereHas('assignments', fn (Builder $assignment) => $assignment
                 ->where('lawyer_id', $user->id)
                 ->whereNull('ended_at')),

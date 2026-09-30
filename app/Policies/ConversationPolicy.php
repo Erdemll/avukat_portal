@@ -12,7 +12,7 @@ class ConversationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isLawyer();
+        return $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class ConversationPolicy
      */
     public function view(User $user, Conversation $conversation): bool
     {
-        return $user->isLawyer()
+        return $user->isLegalWorker()
             && $conversation->participants()->whereKey($user->id)->exists();
     }
 
@@ -29,7 +29,7 @@ class ConversationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isLawyer();
+        return $user->isLegalWorker();
     }
 
     /**

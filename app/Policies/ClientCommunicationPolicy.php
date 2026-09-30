@@ -12,7 +12,7 @@ class ClientCommunicationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -23,7 +23,7 @@ class ClientCommunicationPolicy
         return $user->isManager() || ($user->can('view', $clientCommunication->client)
             && ($clientCommunication->caseFile === null
                 ? $clientCommunication->user_id === $user->id || $clientCommunication->client->responsible_lawyer_id === $user->id
-                : $user->can('view', $clientCommunication->caseFile)));
+                : $user->can('viewContent', $clientCommunication->caseFile)));
     }
 
     /**
@@ -31,7 +31,7 @@ class ClientCommunicationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -39,7 +39,9 @@ class ClientCommunicationPolicy
      */
     public function update(User $user, ClientCommunication $clientCommunication): bool
     {
-        return $this->view($user, $clientCommunication) && ($user->isManager() || $clientCommunication->user_id === $user->id);
+        return $this->view($user, $clientCommunication)
+            && ($user->isManager() || $clientCommunication->user_id === $user->id)
+            && (! $user->isAssistant() || $clientCommunication->caseFile === null || $user->can('update', $clientCommunication->caseFile));
     }
 
     /**

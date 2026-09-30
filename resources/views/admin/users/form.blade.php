@@ -43,6 +43,7 @@
                         <input id="tc_kimlik_no" name="tc_kimlik_no" value="{{ old('tc_kimlik_no', $user->tc_kimlik_no) }}" maxlength="11" inputmode="numeric"
                             class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             pattern="[0-9]{11}" placeholder="12345678901">
+                        @error('tc_kimlik_no')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="mt-5 grid gap-5 sm:grid-cols-2">
@@ -57,7 +58,7 @@
                                 class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="">Seçiniz</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id }}" @selected($user->role_id === $role->id)>{{ $role->name }}</option>
+                                    <option value="{{ $role->id }}" @selected((string) old('role_id', $user->role_id) === (string) $role->id)>{{ $role->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -143,8 +144,6 @@
     @unless($isRetiredLawyer)
     @php
         $lawyerRoleId = $roles->firstWhere('slug', 'lawyer')?->id;
-        $isLawyer = $user->role_id === $lawyerRoleId;
-        $selectedRoleId = old('role_id', $user->role_id);
     @endphp
 
     <script nonce="{{ Vite::cspNonce() }}">
@@ -165,12 +164,7 @@
 
             roleSelect.addEventListener('change', toggleTcField);
 
-            // Initial state
-            const isInitiallyLawyer = roleSelect.value == lawyerRoleId || @js($isLawyer);
-            if (isInitiallyLawyer) {
-                tcField.classList.remove('hidden');
-                tcInput.required = true;
-            }
+            toggleTcField();
         });
     </script>
     @endunless

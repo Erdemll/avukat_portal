@@ -85,7 +85,7 @@ class LegalTaskService
     private function validateAssignee(?CaseFile $caseFile, int $assigneeId, User $actor): void
     {
         $assignee = User::query()->lockForUpdate()->findOrFail($assigneeId);
-        if (! $assignee->is_active || (! $assignee->isLawyer() && ! $assignee->isManager())) {
+        if (! $assignee->is_active || (! $assignee->isLegalWorker() && ! $assignee->isManager())) {
             throw ValidationException::withMessages(['assigned_to' => 'Görev yalnız aktif hukuk kullanıcılarına atanabilir.']);
         }
         if (! $actor->isManager() && $caseFile === null && $assignee->id !== $actor->id) {

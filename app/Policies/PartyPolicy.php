@@ -14,7 +14,7 @@ class PartyPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -22,7 +22,7 @@ class PartyPolicy
      */
     public function view(User $user, Party $party): bool
     {
-        return $user->isManager() || ($user->isLawyer() && (
+        return $user->isManager() || ($user->isLegalWorker() && (
             ($party->created_by === $user->id && ($party->client?->responsible_lawyer_id === null || $party->client->responsible_lawyer_id === $user->id))
             || $party->activeCaseFiles()->visibleTo($user)->exists()
             || (! $party->activeCaseFiles()->exists() && $party->client()->where('responsible_lawyer_id', $user->id)->exists())
@@ -34,7 +34,7 @@ class PartyPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -44,6 +44,11 @@ class PartyPolicy
     {
         if ($user->isManager()) {
             return true;
+        }
+
+        if ($user->isAssistant()) {
+            return $this->view($user, $party)
+                && ! $party->caseFiles()->where('created_by', '!=', $user->id)->exists();
         }
 
         if (! $user->isLawyer()) {

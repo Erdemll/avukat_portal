@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteServiceNoticeRequest;
 use App\Http\Requests\StoreServiceNoticeRequest;
 use App\Http\Requests\UpdateServiceNoticeRequest;
 use App\Models\CaseFile;
@@ -81,9 +82,11 @@ class ServiceNoticeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ServiceNotice $serviceNotice): never
+    public function destroy(DeleteServiceNoticeRequest $request, ServiceNotice $serviceNotice, ServiceNoticeService $service): RedirectResponse
     {
-        abort(405);
+        $service->delete($serviceNotice, $request->validated(), $request->user());
+
+        return redirect()->route('service-notices.index')->with('success', 'Tebligat silindi.');
     }
 
     /** @return Collection<int, CaseFile> */

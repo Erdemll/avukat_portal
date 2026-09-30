@@ -12,7 +12,7 @@ class DocumentFolderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
@@ -20,7 +20,7 @@ class DocumentFolderPolicy
      */
     public function view(User $user, DocumentFolder $documentFolder): bool
     {
-        return $user->can('view', $documentFolder->caseFile);
+        return $user->can('viewContent', $documentFolder->caseFile);
     }
 
     /**
@@ -28,7 +28,7 @@ class DocumentFolderPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isManager() || $user->isLawyer();
+        return $user->isManager() || $user->isLegalWorker();
     }
 
     /**
