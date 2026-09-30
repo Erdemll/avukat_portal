@@ -102,7 +102,7 @@ class Event extends Model
         return match (true) {
             $user->isManager() => $query,
             $user->isEmployee() => $query->where('created_by', $user->id),
-            $user->isAssistant() => $query->whereHas('caseFiles', fn (Builder $cases) => $cases->where('created_by', $user->id)),
+            $user->isAssistant() => $query->whereHas('caseFiles', fn (Builder $cases) => $cases->visibleTo($user)),
             $user->isLawyer() => $query->where('assigned_lawyer_id', $user->id),
             default => $query->whereRaw('1 = 0'),
         };

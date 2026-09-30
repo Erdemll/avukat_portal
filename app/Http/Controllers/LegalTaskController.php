@@ -38,7 +38,7 @@ class LegalTaskController extends Controller
     {
         Gate::authorize('create', LegalTask::class);
 
-        $selectedCase = $request->filled('case_file') ? CaseFile::query()->visibleTo($request->user())->when($request->user()->isAssistant(), fn ($cases) => $cases->where('created_by', $request->user()->id))->find($request->integer('case_file')) : null;
+        $selectedCase = $request->filled('case_file') ? CaseFile::query()->visibleTo($request->user())->find($request->integer('case_file')) : null;
 
         return view('legal-tasks.form', ['legalTask' => new LegalTask(['case_file_id' => $selectedCase?->id, 'assigned_to' => $request->user()->id]), ...$this->formData($request->user(), $selectedCase)]);
     }
@@ -93,7 +93,7 @@ class LegalTaskController extends Controller
     private function formData(User $user, ?CaseFile $currentCase = null): array
     {
         return [
-            'caseFiles' => CaseFile::query()->visibleTo($user)->when($user->isAssistant(), fn ($cases) => $cases->where('created_by', $user->id))->where(fn ($query) => $query->where('status', '!=', 'closed')->when($currentCase, fn ($cases) => $cases->orWhereKey($currentCase)))->orderBy('case_no')->get(),
+            'caseFiles' => CaseFile::query()->visibleTo($user)->where(fn ($query) => $query->where('status', '!=', 'closed')->when($currentCase, fn ($cases) => $cases->orWhereKey($currentCase)))->orderBy('case_no')->get(),
             'assignees' => $user->isManager()
                 ? User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->whereIn('slug', ['lawyer', 'manager', 'assistant']))->orderBy('name')->get()
                 : ($currentCase?->activeLawyers()->orderBy('name')->get() ?? collect())->when($user->isAssistant() || $currentCase === null, fn ($assignees) => $assignees->push($user)),

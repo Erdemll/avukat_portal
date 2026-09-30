@@ -131,6 +131,31 @@
         <aside class="space-y-6">
             <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><h2 class="font-semibold text-slate-900">Sorumlu Avukatlar</h2><div class="mt-4 space-y-3">@foreach($caseFile->activeLawyers as $lawyer)<div class="flex items-center justify-between gap-3"><span class="text-sm font-medium text-slate-800">{{ $lawyer->name }}</span><span class="rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700">{{ $lawyer->pivot->role->label() }}</span></div>@endforeach</div></section>
 
+            <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 class="font-semibold text-slate-900">Dosya Asistanları</h2>
+                <div class="mt-3 space-y-2">
+                    @forelse($caseFile->assistants as $assistant)
+                        <p class="text-sm text-slate-700">{{ $assistant->name }}</p>
+                    @empty
+                        <p class="text-sm text-slate-500">Dosyaya asistan eklenmemiş.</p>
+                    @endforelse
+                </div>
+                @can('assignAssistants', $caseFile)
+                    <form class="mt-4 space-y-3 border-t border-slate-100 pt-4" method="POST" action="{{ route('case-files.assistants.update', $caseFile) }}">
+                        @csrf @method('PUT')
+                        <input type="hidden" name="lock_version" value="{{ $caseFile->lock_version }}">
+                        <div class="max-h-48 space-y-2 overflow-y-auto">
+                            @foreach($assistants as $assistant)
+                                <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="assistant_ids[]" value="{{ $assistant->id }}" @checked(collect(old('assistant_ids', $caseFile->assistants->pluck('id')->all()))->contains($assistant->id))> {{ $assistant->name }}</label>
+                            @endforeach
+                        </div>
+                        @error('assistant_ids')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
+                        @error('lock_version')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
+                        <button class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white">Asistanları Güncelle</button>
+                    </form>
+                @endcan
+            </section>
+
             @if($pastAssignments->isNotEmpty())
                 <details class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <summary class="cursor-pointer text-sm font-semibold text-slate-700">Geçmiş Avukat Atamaları</summary>

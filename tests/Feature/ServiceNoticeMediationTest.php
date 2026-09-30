@@ -116,6 +116,19 @@ it('lets an assistant remove their own notice only within a case they created', 
     $this->assertModelExists($foreignNotice);
 });
 
+it('lets an assigned assistant remove their own notice in a case another user created', function () {
+    $manager = userWithRole('manager');
+    $assistant = userWithRole('assistant');
+    $caseFile = legalCaseFile($manager, [userWithRole('lawyer')]);
+    $caseFile->assistants()->attach($assistant);
+    $notice = ServiceNotice::factory()->create(['case_file_id' => $caseFile, 'created_by' => $assistant])->refresh();
+
+    $this->actingAs($assistant)->delete(route('service-notices.destroy', $notice), ['lock_version' => $notice->lock_version])
+        ->assertRedirect(route('service-notices.index'));
+
+    $this->assertSoftDeleted($notice);
+});
+
 it('rejects deletion by another author or a role without deletion rights', function () {
     $manager = userWithRole('manager');
     $lawyer = userWithRole('lawyer');

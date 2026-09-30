@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\CaseAssignmentRole;
+use App\Models\CaseFile;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,7 +49,7 @@ class PartyPolicy
 
         if ($user->isAssistant()) {
             return $this->view($user, $party)
-                && ! $party->caseFiles()->where('created_by', '!=', $user->id)->exists();
+                && ! $party->caseFiles()->whereNotIn('case_files.id', CaseFile::query()->visibleTo($user)->select('case_files.id'))->exists();
         }
 
         if (! $user->isLawyer()) {

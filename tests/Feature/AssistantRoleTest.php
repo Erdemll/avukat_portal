@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\User;
 use App\Notifications\CaseFileAssignedNotification;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 
 it('lets managers create an assistant account without lawyer credentials', function () {
@@ -184,6 +185,90 @@ it('lets assistants reassign every case without gaining content write access', f
         'lock_version' => $foreignCase->fresh()->lock_version,
     ])->assertForbidden();
     expect($foreignCase->fresh()->status->value)->toBe('active');
+});
+
+it('lets a manager add an assistant to another creators case and grants content editing', function () {
+    $manager = userWithRole('manager');
+    $assistant = userWithRole('assistant');
+    $lawyer = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$lawyer]);
+
+    $this->actingAs($manager)->put(route('case-files.assistants.update', $caseFile), [
+        'assistant_ids' => [$assistant->id],
+        'lock_version' => $caseFile->lock_version,
+    ])->assertRedirect();
+
+    expect($caseFile->assistants()->whereKey($assistant->id)->exists())->toBeTrue();
+    expect(Gate::forUser($assistant)->allows('update', $caseFile))->toBeTrue();
+    expect(AuditLog::query()->where('case_file_id', $caseFile->id)->where('action', AuditAction::CaseFileAssistantsChanged)->exists())->toBeTrue();
+    $this->actingAs($assistant)->get(route('case-files.show', $caseFile))->assertOk()->assertSee('Genel Bilgileri Düzenle');
+    $this->actingAs($assistant)->get(route('case-files.edit', $caseFile))->assertOk();
+    $this->actingAs($assistant)->put(route('case-files.update', $caseFile), [
+        'case_type_id' => $caseFile->case_type_id,
+        'title' => 'Asistan tarafından güncellendi',
+        'priority' => 'normal',
+        'opened_at' => $caseFile->opened_at->toDateString(),
+        'lock_version' => $caseFile->fresh()->lock_version,
+    ])->assertRedirect();
+
+    expect($caseFile->fresh()->title)->toBe('Asistan tarafından güncellendi');
+    $this->actingAs($assistant)->post(route('case-files.parties.store', $caseFile), [
+        'type' => 'company',
+        'company_name' => 'Eklenen taraf',
+        'role' => 'defendant',
+        'side' => 'opposing',
+    ])->assertRedirect();
+    expect($caseFile->activeParties()->count())->toBe(1);
+    $this->actingAs($assistant)->get(route('hearings.create', ['case_file' => $caseFile->id]))->assertOk();
+    $this->actingAs($assistant)->get(route('deadlines.create', ['case_file' => $caseFile->id]))->assertOk();
+    $this->actingAs($assistant)->get(route('legal-tasks.create', ['case_file' => $caseFile->id]))->assertOk();
+});
+
+it('removes content access when a manager removes an assistant from another creators case', function () {
+    $manager = userWithRole('manager');
+    $assistant = userWithRole('assistant');
+    $caseFile = legalCaseFile($manager, [userWithRole('lawyer')]);
+    $caseFile->assistants()->attach($assistant);
+
+    $this->actingAs($manager)->put(route('case-files.assistants.update', $caseFile), [
+        'lock_version' => $caseFile->lock_version,
+    ])->assertRedirect();
+
+    expect($caseFile->assistants()->whereKey($assistant->id)->exists())->toBeFalse();
+    expect(Gate::forUser($assistant)->allows('update', $caseFile))->toBeFalse();
+    $this->actingAs($assistant)->get(route('case-files.show', $caseFile))->assertOk()->assertSee('Atamaları Güncelle')->assertDontSee('Genel Bilgileri Düzenle');
+    $this->actingAs($assistant)->get(route('case-files.edit', $caseFile))->assertForbidden();
+});
+
+it('prevents assistants from adding themselves and rejects non-assistant assignments', function () {
+    $manager = userWithRole('manager');
+    $assistant = userWithRole('assistant');
+    $lawyer = userWithRole('lawyer');
+    $caseFile = legalCaseFile($manager, [$lawyer]);
+
+    $this->actingAs($assistant)->put(route('case-files.assistants.update', $caseFile), [
+        'assistant_ids' => [$assistant->id],
+        'lock_version' => $caseFile->lock_version,
+    ])->assertForbidden();
+    $this->actingAs($manager)->put(route('case-files.assistants.update', $caseFile), [
+        'assistant_ids' => [$lawyer->id],
+        'lock_version' => $caseFile->lock_version,
+    ])->assertSessionHasErrors('assistant_ids.0');
+
+    expect($caseFile->assistants()->exists())->toBeFalse();
+});
+
+it('rejects assistant assignment changes based on an outdated case version', function () {
+    $manager = userWithRole('manager');
+    $assistant = userWithRole('assistant');
+    $caseFile = legalCaseFile($manager, [userWithRole('lawyer')]);
+
+    $this->actingAs($manager)->put(route('case-files.assistants.update', $caseFile), [
+        'assistant_ids' => [$assistant->id],
+        'lock_version' => $caseFile->lock_version + 1,
+    ])->assertSessionHasErrors('lock_version');
+
+    expect($caseFile->assistants()->exists())->toBeFalse();
 });
 
 it('rejects assistants as assigned lawyers and keeps lawyer assignment changes forbidden', function () {

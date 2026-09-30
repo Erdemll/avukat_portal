@@ -74,6 +74,12 @@ class User extends Authenticatable
         return $this->hasMany(CaseFile::class, 'created_by');
     }
 
+    public function assistedCaseFiles(): BelongsToMany
+    {
+        return $this->belongsToMany(CaseFile::class, 'case_file_assistants', 'assistant_id', 'case_file_id')
+            ->withTimestamps();
+    }
+
     public function caseFileAssignments(): HasMany
     {
         return $this->hasMany(CaseFileAssignment::class, 'lawyer_id');

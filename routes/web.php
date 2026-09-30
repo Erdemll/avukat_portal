@@ -8,6 +8,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Controllers\CaseAssignmentRequestController;
 use App\Http\Controllers\CaseFileAssignmentController;
+use App\Http\Controllers\CaseFileAssistantController;
 use App\Http\Controllers\CaseFileController;
 use App\Http\Controllers\CaseFileDocumentController;
 use App\Http\Controllers\CaseFilePartyController;
@@ -68,6 +69,7 @@ Route::middleware('auth')->group(function (): void {
     Route::resource('case-files', CaseFileController::class)->parameters(['case-files' => 'caseFile'])->except(['destroy']);
     Route::patch('/case-files/{caseFile}/status', CaseFileStatusController::class)->name('case-files.status.update');
     Route::put('/case-files/{caseFile}/assignments', CaseFileAssignmentController::class)->name('case-files.assignments.update');
+    Route::put('/case-files/{caseFile}/assistants', CaseFileAssistantController::class)->name('case-files.assistants.update');
     Route::post('/case-files/{caseFile}/parties', [CaseFilePartyController::class, 'store'])->name('case-files.parties.store');
     Route::delete('/case-files/{caseFile}/parties/{caseFileParty}', [CaseFilePartyController::class, 'destroy'])->name('case-files.parties.destroy');
     Route::post('/case-files/{caseFile}/documents', [CaseFileDocumentController::class, 'store'])->name('case-files.documents.store');

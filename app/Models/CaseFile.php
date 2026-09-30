@@ -92,6 +92,12 @@ class CaseFile extends Model
             ->withTimestamps();
     }
 
+    public function assistants(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'case_file_assistants', 'case_file_id', 'assistant_id')
+            ->withTimestamps();
+    }
+
     public function statusHistories(): HasMany
     {
         return $this->hasMany(CaseFileStatusHistory::class);
@@ -156,7 +162,9 @@ class CaseFile extends Model
     {
         return match (true) {
             $user->isManager() => $query,
-            $user->isAssistant() => $query->where('created_by', $user->id),
+            $user->isAssistant() => $query->where(fn (Builder $cases) => $cases
+                ->where('created_by', $user->id)
+                ->orWhereHas('assistants', fn (Builder $assistants) => $assistants->whereKey($user->id))),
             $user->isLawyer() => $query->whereHas('assignments', fn (Builder $assignment) => $assignment
                 ->where('lawyer_id', $user->id)
                 ->whereNull('ended_at')),

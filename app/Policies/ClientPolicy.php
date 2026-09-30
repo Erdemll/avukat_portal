@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\CaseFile;
 use App\Models\Client;
 use App\Models\User;
 
@@ -39,7 +40,7 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
-        if ($user->isAssistant() && $client->party->caseFiles()->where('created_by', '!=', $user->id)->exists()) {
+        if ($user->isAssistant() && $client->party->caseFiles()->whereNotIn('case_files.id', CaseFile::query()->visibleTo($user)->select('case_files.id'))->exists()) {
             return false;
         }
 

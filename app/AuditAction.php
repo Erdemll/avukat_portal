@@ -63,6 +63,7 @@ enum AuditAction: string
     case CaseFileViewed = 'CASE_FILE_VIEWED';
     case CaseFileStatusChanged = 'CASE_FILE_STATUS_CHANGED';
     case CaseFileAssignmentsChanged = 'CASE_FILE_ASSIGNMENTS_CHANGED';
+    case CaseFileAssistantsChanged = 'CASE_FILE_ASSISTANTS_CHANGED';
     case CaseFileEventLinked = 'CASE_FILE_EVENT_LINKED';
     case CaseFilePartyAdded = 'CASE_FILE_PARTY_ADDED';
     case CaseFilePartyRemoved = 'CASE_FILE_PARTY_REMOVED';

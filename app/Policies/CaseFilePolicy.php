@@ -39,7 +39,9 @@ class CaseFilePolicy
      */
     public function update(User $user, CaseFile $caseFile): bool
     {
-        return $user->isAssistant() ? $caseFile->created_by === $user->id : $this->view($user, $caseFile);
+        return $user->isAssistant()
+            ? $caseFile->created_by === $user->id || $caseFile->assistants()->whereKey($user->id)->exists()
+            : $this->view($user, $caseFile);
     }
 
     public function viewContent(User $user, CaseFile $caseFile): bool
@@ -74,6 +76,11 @@ class CaseFilePolicy
     public function assign(User $user, CaseFile $caseFile): bool
     {
         return $user->isManager() || $user->isAssistant();
+    }
+
+    public function assignAssistants(User $user, CaseFile $caseFile): bool
+    {
+        return $user->isManager();
     }
 
     public function manageParties(User $user, CaseFile $caseFile): bool

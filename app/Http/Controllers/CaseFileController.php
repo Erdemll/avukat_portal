@@ -91,7 +91,7 @@ class CaseFileController extends Controller
         Gate::authorize('view', $caseFile);
         $audit->safelyLog(AuditAction::CaseFileViewed, $request->user(), auditable: $caseFile, description: 'Hukuki dosya görüntülendi.', caseFile: $caseFile);
 
-        if ($request->user()->isAssistant() && $caseFile->created_by !== $request->user()->id) {
+        if ($request->user()->isAssistant() && ! $request->user()->can('update', $caseFile)) {
             $caseFile->load(['caseType', 'activeLawyers', 'assignments.lawyer']);
 
             return view('case-files.assignment-only', [
@@ -101,7 +101,7 @@ class CaseFileController extends Controller
         }
 
         $caseFile->load([
-            'caseType', 'creator', 'activeLawyers', 'assignments.lawyer',
+            'caseType', 'creator', 'activeLawyers', 'assistants', 'assignments.lawyer',
             'events' => fn ($query) => $query->visibleTo($request->user()),
             'activeParties.client', 'proceedings',
             'documentFolders',
@@ -122,6 +122,7 @@ class CaseFileController extends Controller
         return view('case-files.show', [
             'caseFile' => $caseFile,
             'lawyers' => $request->user()->can('assign', $caseFile) ? $this->lawyers() : collect(),
+            'assistants' => $request->user()->can('assignAssistants', $caseFile) ? User::query()->where('is_active', true)->whereHas('role', fn ($query) => $query->where('slug', 'assistant'))->orderBy('name')->get() : collect(),
             'availableParties' => Party::query()->visibleTo($request->user())->orderBy('company_name')->orderBy('name')->limit(100)->get(),
             'canUpdateCase' => $canUpdateCase,
             'canManageParties' => $canUpdateCase,
