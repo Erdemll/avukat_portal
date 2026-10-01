@@ -36,15 +36,15 @@ class CaseFileController extends Controller
         $search = str_replace(['%', '_'], ['\%', '\_'], $request->string('search')->trim()->toString());
 
         $caseFiles = CaseFile::query()
-            ->when(! $user->isAssistant(), fn ($query) => $query->visibleTo($user))
+            ->visibleTo($user)
             ->with(['caseType', 'activeLawyers'])
             ->when($search !== '', fn ($query) => $query->where(fn ($nested) => $nested
                 ->where('case_no', 'like', '%'.$search.'%')
                 ->orWhere('title', 'like', '%'.$search.'%')
-                ->when(! $user->isAssistant(), fn ($cases) => $cases->orWhereHas('activeParties', fn ($parties) => $parties->where(fn ($party) => $party
+                ->orWhereHas('activeParties', fn ($parties) => $parties->where(fn ($party) => $party
                     ->where('name', 'like', '%'.$search.'%')
                     ->orWhere('surname', 'like', '%'.$search.'%')
-                    ->orWhere('company_name', 'like', '%'.$search.'%'))))))
+                    ->orWhere('company_name', 'like', '%'.$search.'%')))))
             ->when($status !== '', fn ($query) => $query->where('status', $status))
             ->when($category !== '', fn ($query) => $query->whereHas('caseType', fn ($types) => $types->where('category', $category)))
             ->when($request->filled('case_type'), fn ($query) => $query->where('case_type_id', $request->integer('case_type')))
@@ -90,15 +90,6 @@ class CaseFileController extends Controller
     {
         Gate::authorize('view', $caseFile);
         $audit->safelyLog(AuditAction::CaseFileViewed, $request->user(), auditable: $caseFile, description: 'Hukuki dosya görüntülendi.', caseFile: $caseFile);
-
-        if ($request->user()->isAssistant() && ! $request->user()->can('update', $caseFile)) {
-            $caseFile->load(['caseType', 'activeLawyers', 'assignments.lawyer']);
-
-            return view('case-files.assignment-only', [
-                'caseFile' => $caseFile,
-                'lawyers' => $this->lawyers(),
-            ]);
-        }
 
         $caseFile->load([
             'caseType', 'creator', 'activeLawyers', 'assistants', 'assignments.lawyer',

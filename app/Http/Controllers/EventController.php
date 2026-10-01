@@ -18,6 +18,7 @@ use App\Services\AuditService;
 use App\Services\EventManagementService;
 use App\Services\EventNotificationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -87,11 +88,12 @@ class EventController extends Controller
         return redirect()->route('events.show', $event);
     }
 
-    public function show(Event $event, AuditService $audit): View
+    public function show(Request $request, Event $event, AuditService $audit): View
     {
         Gate::authorize('view', $event);
         $event->load([
-            'creator', 'assignedLawyer', 'eventType', 'documents.uploader', 'caseFiles',
+            'creator', 'assignedLawyer', 'eventType', 'documents.uploader',
+            'caseFiles' => fn ($query) => $query->visibleTo($request->user()),
             'updates' => fn ($query) => $query->latest(),
             'updates.user', 'updates.documents.uploader',
         ]);

@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class CaseFileAssistantService
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(private AuditService $audit, private CaseFileNotificationService $notifications) {}
 
     /** @param array<int, int|string> $assistantIds */
     public function sync(CaseFile $caseFile, array $assistantIds, int $expectedLockVersion, User $actor): void
@@ -38,6 +38,10 @@ class CaseFileAssistantService
             $caseFile->assistants()->sync($assistantIds);
             $caseFile->forceFill(['lock_version' => $caseFile->lock_version + 1])->save();
             $this->audit->log(AuditAction::CaseFileAssistantsChanged, $actor, auditable: $caseFile, description: 'Hukuki dosya asistanları güncellendi.', oldValues: ['assistant_ids' => $oldIds], newValues: ['assistant_ids' => $assistantIds], caseFile: $caseFile);
+            $addedIds = array_values(array_diff($assistantIds, $oldIds));
+            if ($addedIds !== []) {
+                DB::afterCommit(fn () => $this->notifications->assistantAssigned($caseFile, User::query()->whereKey($addedIds)->get(), $actor));
+            }
         });
     }
 }

@@ -10,7 +10,7 @@
 
     if ($isLegalUser) {
         $coreNavigation = [...$coreNavigation,
-            ['label' => 'Hukuki Dosyalar', 'url' => route('case-files.index'), 'active' => ['case-files.*'], 'icon' => 'M3.75 9.75h16.5m-16.5 0A2.25 2.25 0 0 0 1.5 12v6.75A2.25 2.25 0 0 0 3.75 21h16.5a2.25 2.25 0 0 0 2.25-2.25V12a2.25 2.25 0 0 0-2.25-2.25m-16.5 0V6.75A2.25 2.25 0 0 1 6 4.5h4.5l1.5 2.25h5.25A2.25 2.25 0 0 1 19.5 9v.75'],
+            ['label' => 'Hukuki Dosyalar', 'url' => route('case-files.index'), 'active' => ['case-files.index', 'case-files.show', 'case-files.create', 'case-files.edit'], 'icon' => 'M3.75 9.75h16.5m-16.5 0A2.25 2.25 0 0 0 1.5 12v6.75A2.25 2.25 0 0 0 3.75 21h16.5a2.25 2.25 0 0 0 2.25-2.25V12a2.25 2.25 0 0 0-2.25-2.25m-16.5 0V6.75A2.25 2.25 0 0 1 6 4.5h4.5l1.5 2.25h5.25A2.25 2.25 0 0 1 19.5 9v.75'],
             ['label' => 'Müvekkiller', 'url' => route('clients.index'), 'active' => ['clients.*'], 'icon' => 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.5-1.632Z'],
             ['label' => 'Gelişmiş Arama', 'url' => route('search.index'), 'active' => ['search.*'], 'icon' => 'm21 21-4.35-4.35m1.35-5.4a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z'],
         ];
@@ -18,6 +18,10 @@
 
     if ($user->isLegalWorker()) {
         $coreNavigation[] = ['label' => 'Mesajlar', 'url' => route('messages.index'), 'active' => ['messages.*'], 'icon' => 'M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.142-4.03 7.5-9 7.5a10.22 10.22 0 0 1-4.38-.968L3 20.25l1.337-3.342C3.49 15.564 3 13.887 3 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5Z'];
+    }
+
+    if ($user->isAssistant()) {
+        $coreNavigation[] = ['label' => 'Avukat Atamaları', 'url' => route('case-assignments.index'), 'active' => ['case-assignments.*', 'case-files.assignments.show'], 'icon' => 'M18 7.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6 9a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm12.75 12a6.75 6.75 0 0 0-13.5 0m17.25 0a7.5 7.5 0 0 0-9.832-7.126'];
     }
 
     $operationNavigation = $isLegalUser ? [

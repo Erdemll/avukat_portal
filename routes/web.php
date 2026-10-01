@@ -67,6 +67,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/uyap-import', [UyapImportController::class, 'create'])->name('uyap-import.create');
     Route::post('/uyap-import', [UyapImportController::class, 'store'])->name('uyap-import.store');
     Route::resource('case-files', CaseFileController::class)->parameters(['case-files' => 'caseFile'])->except(['destroy']);
+    Route::get('/case-assignments', [CaseFileAssignmentController::class, 'index'])->name('case-assignments.index');
+    Route::get('/case-files/{caseFile}/assignments', [CaseFileAssignmentController::class, 'show'])->name('case-files.assignments.show');
     Route::patch('/case-files/{caseFile}/status', CaseFileStatusController::class)->name('case-files.status.update');
     Route::put('/case-files/{caseFile}/assignments', CaseFileAssignmentController::class)->name('case-files.assignments.update');
     Route::put('/case-files/{caseFile}/assistants', CaseFileAssistantController::class)->name('case-files.assistants.update');

@@ -138,7 +138,7 @@
     </section>
 
     {{-- Lawyer unprocessed events --}}
-    @if($user->isLawyer() && $unprocessedEvents->isNotEmpty())
+    @if($user->isLegalWorker() && $unprocessedEvents->isNotEmpty())
         <section class="mt-8 rounded-xl border border-amber-200 bg-amber-50 shadow-sm">
             <div class="flex items-center gap-2 border-b border-amber-200/60 px-6 py-4">
                 <svg class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

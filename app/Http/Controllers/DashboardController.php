@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $counts = ['total' => (clone $events)->count(), 'open' => (clone $events)->where('system_status', 'open')->count(), 'in_progress' => (clone $events)->where('system_status', 'in_progress')->count(), 'waiting' => (clone $events)->where('system_status', 'waiting')->count(), 'resolved' => (clone $events)->where('system_status', 'resolved')->count(), 'closed' => (clone $events)->where('system_status', 'closed')->count(), 'urgent' => (clone $events)->where('priority', 'urgent')->count()];
 
         $recentEvents = (clone $events)->with(['eventType', 'creator', 'assignedLawyer'])->latest('updated_at')->limit(10)->get();
-        $unprocessedEvents = $request->user()->isLawyer()
+        $unprocessedEvents = $request->user()->isLegalWorker()
             ? (clone $events)->whereIn('system_status', ['open', 'in_progress', 'waiting'])->doesntHave('updates')->with(['eventType', 'creator'])->latest('updated_at')->limit(10)->get()
             : collect();
         $recentUpdates = $request->user()->isManager()

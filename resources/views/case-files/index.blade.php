@@ -1,9 +1,9 @@
-<x-layouts.app :title="auth()->user()->isAssistant() ? 'Hukuki Dosyalar' : 'Dosyalarım'">
+<x-layouts.app title="Dosyalarım">
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Hukuk Operasyonu</p>
-            <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-950">{{ auth()->user()->isAssistant() ? 'Hukuki Dosyalar' : 'Dosyalarım' }}</h1>
-            <p class="mt-1 text-sm text-slate-500">{{ auth()->user()->isAssistant() ? 'Dosyaları görüntüleyin ve avukat atamalarını yönetin.' : 'Aktif dava, icra ve diğer hukuki dosyalarınızı tek merkezden yönetin.' }}</p>
+            <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-950">Dosyalarım</h1>
+            <p class="mt-1 text-sm text-slate-500">Aktif dava, icra ve diğer hukuki dosyalarınızı tek merkezden yönetin.</p>
         </div>
         @can('create', App\Models\CaseFile::class)
             <a class="rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800" href="{{ route('case-files.create') }}">Yeni Hukuki Dosya</a>
@@ -11,7 +11,7 @@
     </div>
 
     <div class="mt-6 flex gap-2 overflow-x-auto pb-1 text-sm">
-        <a class="whitespace-nowrap rounded-full px-4 py-2 font-medium {{ !request('status') && !request('category') ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}" href="{{ route('case-files.index') }}">Tüm Dosyalar</a>
+        <a class="whitespace-nowrap rounded-full px-4 py-2 font-medium {{ !request('status') && !request('category') ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}" href="{{ route('case-files.index') }}">Dosyalarım</a>
         <a class="whitespace-nowrap rounded-full px-4 py-2 font-medium {{ request('status') === 'active' ? 'bg-emerald-700 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}" href="{{ route('case-files.index', ['status' => 'active']) }}">Aktif</a>
         <a class="whitespace-nowrap rounded-full px-4 py-2 font-medium {{ request('status') === 'closed' ? 'bg-slate-700 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}" href="{{ route('case-files.index', ['status' => 'closed']) }}">Kapalı</a>
         <a class="whitespace-nowrap rounded-full px-4 py-2 font-medium {{ request('category') === 'lawsuit' ? 'bg-indigo-700 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200' }}" href="{{ route('case-files.index', ['category' => 'lawsuit']) }}">Dava Dosyaları</a>

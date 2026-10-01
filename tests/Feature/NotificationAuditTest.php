@@ -8,6 +8,7 @@ use App\Notifications\CaseAssignmentRequestDecidedNotification;
 use App\Notifications\CaseDocumentsUploadedNotification;
 use App\Notifications\CaseDocumentVersionUploadedNotification;
 use App\Notifications\CaseFileAssignedNotification;
+use App\Notifications\CaseFileAssistantAssignedNotification;
 use App\Notifications\DeadlineReminderNotification;
 use App\Notifications\DocumentUploadedNotification;
 use App\Notifications\EventAssignedNotification;
@@ -31,6 +32,7 @@ it('queues every legal activity notification for database and mail while keeping
         CaseDocumentsUploadedNotification::class,
         CaseDocumentVersionUploadedNotification::class,
         CaseFileAssignedNotification::class,
+        CaseFileAssistantAssignedNotification::class,
         DeadlineReminderNotification::class,
         DocumentUploadedNotification::class,
         EventAssignedNotification::class,

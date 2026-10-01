@@ -148,6 +148,7 @@
                 </div>
 
                 <div class="border-t border-slate-100 px-6 py-4">
+                    @can('createDocument', $event)
                     <form method="POST" enctype="multipart/form-data" action="{{ route('events.documents.store', $event) }}">
                         @csrf
                         <div class="flex flex-wrap items-end gap-3">
@@ -165,6 +166,7 @@
                             </button>
                         </div>
                     </form>
+                    @endcan
                 </div>
             </section>
 

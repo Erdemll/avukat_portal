@@ -5,7 +5,7 @@
 <x-layouts.app :title="$caseFile->case_no.' Avukat Atamaları'">
     <div class="mx-auto max-w-3xl space-y-6">
         <div>
-            <a class="text-sm font-medium text-slate-500 hover:text-slate-900" href="{{ route('case-files.index') }}">&larr; Hukuki Dosyalar</a>
+            <a class="text-sm font-medium text-slate-500 hover:text-slate-900" href="{{ route('case-assignments.index') }}">&larr; Avukat Atamaları</a>
             <div class="mt-4 flex flex-wrap items-center gap-3">
                 <span class="font-mono text-sm font-bold text-indigo-600">{{ $caseFile->case_no }}</span>
                 <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $caseFile->status->badgeClass() }}">{{ $caseFile->status->label() }}</span>

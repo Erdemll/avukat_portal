@@ -16,6 +16,8 @@ use Throwable;
 
 class CaseWorkflowNotificationService
 {
+    public function __construct(private CaseFileNotificationService $caseFileNotifications) {}
+
     public function assignmentRequestCreated(CaseAssignmentRequest $request, User $actor): void
     {
         $this->send(collect($this->managers()->all())->push($request->requestedTo), new CaseAssignmentRequestCreatedNotification($request), $actor);
@@ -28,12 +30,12 @@ class CaseWorkflowNotificationService
 
     public function serviceNoticeCreated(ServiceNotice $notice, User $actor): void
     {
-        $this->send(collect($notice->caseFile->activeLawyers->all())->concat($this->managers()), new ServiceNoticeCreatedNotification($notice), $actor);
+        $this->send($this->caseFileNotifications->participants($notice->caseFile)->concat($this->managers()), new ServiceNoticeCreatedNotification($notice), $actor);
     }
 
     public function financialEntryCreated(CaseFinancialEntry $entry, User $actor): void
     {
-        $this->send($entry->caseFile->activeLawyers, new FinancialEntryCreatedNotification($entry), $actor);
+        $this->send($this->caseFileNotifications->participants($entry->caseFile), new FinancialEntryCreatedNotification($entry), $actor);
     }
 
     private function managers(): Collection

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\CaseDocumentsUploadedNotification;
 use App\Notifications\CaseDocumentVersionUploadedNotification;
 use App\Notifications\CaseFileAssignedNotification;
+use App\Notifications\CaseFileAssistantAssignedNotification;
 use App\Notifications\LegalActivityNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -21,6 +22,12 @@ class CaseFileNotificationService
         $this->send($lawyers, new CaseFileAssignedNotification($caseFile), $actor);
     }
 
+    /** @param Collection<int, User> $assistants */
+    public function assistantAssigned(CaseFile $caseFile, Collection $assistants, User $actor): void
+    {
+        $this->send($assistants, new CaseFileAssistantAssignedNotification($caseFile), $actor);
+    }
+
     /**
      * @param  array<int, string>  $documentNames
      */
@@ -31,7 +38,7 @@ class CaseFileNotificationService
         }
 
         $this->send(
-            $caseFile->activeLawyers()->get(),
+            $this->participants($caseFile),
             new CaseDocumentsUploadedNotification($caseFile, $documentNames),
             $actor,
         );
@@ -42,10 +49,21 @@ class CaseFileNotificationService
         $caseFile = $version->document->caseFile;
 
         $this->send(
-            $caseFile->activeLawyers()->get(),
+            $this->participants($caseFile),
             new CaseDocumentVersionUploadedNotification($version),
             $actor,
         );
+    }
+
+    /** @return Collection<int, User> */
+    public function participants(CaseFile $caseFile): Collection
+    {
+        $users = $caseFile->activeLawyers()->get()->concat($caseFile->assistants()->get());
+        if ($caseFile->creator?->isAssistant()) {
+            $users->push($caseFile->creator);
+        }
+
+        return $users->unique('id')->values();
     }
 
     /**

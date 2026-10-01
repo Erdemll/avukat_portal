@@ -100,6 +100,9 @@ class UserController extends Controller
                 throw ValidationException::withMessages(['role_id' => 'Bu avukata atanmış aktif işler bulunduğu için rolü değiştirilemez.']);
             }
             $oldRole = $lockedUser->role_id;
+            if ($changingRole && $lockedUser->isAssistant()) {
+                $lockedUser->assistedCaseFiles()->detach();
+            }
             $lockedUser->fill($request->validated());
             if ($selectedRole->slug === 'assistant') {
                 $lockedUser->tc_kimlik_no = null;

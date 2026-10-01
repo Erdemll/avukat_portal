@@ -20,10 +20,12 @@ class CaseFilePolicy
      */
     public function view(User $user, CaseFile $caseFile): bool
     {
-        return $user->isManager() || $user->isAssistant() || ($user->isLawyer() && $caseFile->assignments()
-            ->where('lawyer_id', $user->id)
-            ->whereNull('ended_at')
-            ->exists());
+        return $user->isManager()
+            || ($user->isAssistant() && ($caseFile->created_by === $user->id || $caseFile->assistants()->whereKey($user->id)->exists()))
+            || ($user->isLawyer() && $caseFile->assignments()
+                ->where('lawyer_id', $user->id)
+                ->whereNull('ended_at')
+                ->exists());
     }
 
     /**
@@ -39,9 +41,7 @@ class CaseFilePolicy
      */
     public function update(User $user, CaseFile $caseFile): bool
     {
-        return $user->isAssistant()
-            ? $caseFile->created_by === $user->id || $caseFile->assistants()->whereKey($user->id)->exists()
-            : $this->view($user, $caseFile);
+        return $this->view($user, $caseFile);
     }
 
     public function viewContent(User $user, CaseFile $caseFile): bool
