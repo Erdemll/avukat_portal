@@ -9,6 +9,11 @@ enum CaseFilePartyRole: string
     case Defendant = 'defendant';
     case Creditor = 'creditor';
     case Debtor = 'debtor';
+    case Complainant = 'complainant';
+    case Suspect = 'suspect';
+    case Accused = 'accused';
+    case Victim = 'victim';
+    case Witness = 'witness';
     case Other = 'other';
 
     public function label(): string
@@ -19,6 +24,11 @@ enum CaseFilePartyRole: string
             self::Defendant => 'Davalı',
             self::Creditor => 'Alacaklı',
             self::Debtor => 'Borçlu',
+            self::Complainant => 'Müşteki',
+            self::Suspect => 'Şüpheli',
+            self::Accused => 'Sanık',
+            self::Victim => 'Mağdur',
+            self::Witness => 'Tanık',
             self::Other => 'Diğer',
         };
     }

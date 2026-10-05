@@ -73,6 +73,30 @@ it('lets assigned lawyers add and end case party relationships', function () {
     expect($caseParty->fresh()->left_at)->not->toBeNull();
 });
 
+it('offers and saves the new case party roles', function (string $role, string $label) {
+    $manager = userWithRole('manager');
+    $caseFile = legalCaseFile($manager);
+
+    $this->actingAs($manager)->get(route('case-files.show', $caseFile))
+        ->assertSee('<option value="'.$role.'">'.$label.'</option>', false);
+
+    $this->actingAs($manager)->post(route('case-files.parties.store', $caseFile), [
+        'type' => 'company',
+        'company_name' => 'Yeni Taraf AŞ',
+        'role' => $role,
+        'side' => 'opposing',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('case_file_parties', ['case_file_id' => $caseFile->id, 'role' => $role]);
+    $this->actingAs($manager)->get(route('case-files.show', $caseFile))->assertSee($label);
+})->with([
+    ['complainant', 'Müşteki'],
+    ['suspect', 'Şüpheli'],
+    ['accused', 'Sanık'],
+    ['victim', 'Mağdur'],
+    ['witness', 'Tanık'],
+]);
+
 it('revokes client visibility when the case party relationship ends', function () {
     $manager = userWithRole('manager');
     $lawyer = userWithRole('lawyer');
